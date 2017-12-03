@@ -1,0 +1,18 @@
+Works:
+POST / HTTP/1.1\r\n
+Host: 127.0.0.1:8888\r\n
+Accept: */*\r\n
+Content-Length: 31\r\n
+Content-Type: application/x-www-form-urlencoded\r\n
+\r\n
+user=96999125025&pass=wDkEIBdaQ
+
+Not Working
+POST / HTTP/1.1\r\n
+Host: 127.0.0.1:8888\r\n
+User-Agent: reqwest/0.8.1\r\n
+Accept: */*\r\n
+Content-Length: 31\r\n
+Accept-Encoding: gzip\r\n
+\r\n
+user=96999125025&pass=wDkEIBdaQ
