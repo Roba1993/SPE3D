@@ -18,3 +18,9 @@ error_chain!{
         Dlc(::dlc_decrypter::error::Error, ::dlc_decrypter::error::ErrorKind);
     }
 }
+
+impl<A> From<::std::sync::PoisonError<A>> for Error {
+    fn from(s: ::std::sync::PoisonError<A>) -> Self {
+        Error::from("PoisnLockError")
+    }
+}

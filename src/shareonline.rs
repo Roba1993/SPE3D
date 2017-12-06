@@ -1,8 +1,10 @@
 use error::*;
 use reqwest;
-use std::io::Read;
 use regex::Regex;
+use package::{DownloadFile, FileHash, FileStatus, FileHoster};
+use std::collections::HashMap;
 
+#[derive(Debug, Clone)]
 pub struct ShareOnline {
     usr: String,
     pwd: String,
@@ -41,21 +43,29 @@ impl ShareOnline {
     }
 
     pub fn download<S: Into<String>>(&self, url: S) -> Result<reqwest::Response> {
-        // get the link struct
-        let link = ShareOnlineLink::new(url)?;
-
         // download the header data
-        let link = self.download_file_info(link)?;
+        let link = self.download_file_info(url)?;
 
         // start the real download
-        self.download_file(link)
+        self.download_file(&link)
     }
 
-    /****************** Private Function ***************/
-    fn download_file_info(&self, link: ShareOnlineLink) -> Result<ShareOnlineLink> {
-        let mut link = link;
-        let info_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=download&lid={}", self.usr, self.pwd, link.id);
+    pub fn download_file_info<S: Into<String>>(&self, url: S) -> Result<DownloadFile> {
+        // split the url and id
+        let url = url.into();
+        let res: Vec<&str> = url.split("/dl/").collect();
+
+        // check if the values are valid
+        let link : &str = res.get(0).ok_or("Can't find the share-online host in the link")?;
+        let id = res.get(1).ok_or("Can't find a download id in the link")?;
+
+        // check if the right host is set
+        if link != "http://www.share-online.biz" && link != "https://www.share-online.biz" {
+            bail!("The given link wasn't a share-online download link");
+        }
         
+        // make the request call
+        let info_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=download&lid={}", self.usr, self.pwd, id);
         let mut resp = reqwest::get(&info_url)?;
 
         // only continue if the answer was successfull
@@ -66,23 +76,36 @@ impl ShareOnline {
         // get the body
         let body = resp.text()?;
 
-        // get the data from the response
-        link.status = String::from(&Regex::new(r"STATUS: ([^\s]+)")?.find(&body).ok_or("No status available")?.as_str()[8..]);
-        link.url = String::from(&Regex::new(r"URL: ([^\s]+)")?.find(&body).ok_or("No url available")?.as_str()[5..]);
-        link.name = String::from(&Regex::new(r"NAME: ([^\s]+)")?.find(&body).ok_or("No name available")?.as_str()[6..]);
-        link.size = Regex::new(r"SIZE: ([^\s]+)")?.find(&body).ok_or("No size available")?.as_str()[6..].parse::<u64>()?;
-        link.md5 = String::from(&Regex::new(r"MD5: ([^\s]+)")?.find(&body).ok_or("No md5 available")?.as_str()[5..]);
+        let status = String::from(&Regex::new(r"STATUS: ([^\s]+)")?.find(&body).ok_or("No status available")?.as_str()[8..]);
+        println!("STATUS: {}", status);
 
-        Ok(link)
+        // define the addiotional infos with the premium url
+        let mut infos = HashMap::new();
+        infos.insert("premium_url", String::from(&Regex::new(r"URL: ([^\s]+)")?.find(&body).ok_or("No url available")?.as_str()[5..]));
+
+        let mut f_info = DownloadFile::new();
+        // todo check the file status correctly
+        f_info.status = FileStatus::Online;
+        f_info.host = FileHoster::ShareOnline;
+        f_info.name = String::from(&Regex::new(r"NAME: ([^\s]+)")?.find(&body).ok_or("No name available")?.as_str()[6..]);
+        f_info.url = url.clone();
+        f_info.size = Regex::new(r"SIZE: ([^\s]+)")?.find(&body).ok_or("No size available")?.as_str()[6..].parse::<u64>()?;
+        f_info.hash = FileHash::Md5(String::from(&Regex::new(r"MD5: ([^\s]+)")?.find(&body).ok_or("No md5 available")?.as_str()[5..]));
+        f_info.infos = infos;
+
+        Ok(f_info)
     }
 
-    fn download_file(&self, link: ShareOnlineLink) -> Result<reqwest::Response> {
+    pub fn download_file(&self, link: &DownloadFile) -> Result<reqwest::Response> {
         // set the download header
         let mut headers = reqwest::header::Headers::new();
         headers.set_raw("Cookie", format!("a={}; Expires={}; HttpOnly; Path=/; Domain=.share-online.biz", self.key, self.expire_date));
 
+        // get the premium url
+        let url = link.infos.get("premium_url").ok_or("Premium url not found")?;
+
         // make the request
-        let resp = reqwest::Client::new().get(&link.url)
+        let resp = reqwest::Client::new().get(url)
             .headers(headers)
             .send()?;
 
@@ -96,14 +119,14 @@ impl ShareOnline {
     }
 }
 
-struct ShareOnlineLink {
-    link: String,
-    id: String,
-    status: String,
-    url: String,
-    name: String,
-    size: u64,
-    md5: String
+pub struct ShareOnlineLink {
+    pub link: String,
+    pub id: String,
+    pub status: String,
+    pub url: String,
+    pub name: String,
+    pub size: u64,
+    pub md5: String
 }
 
 impl ShareOnlineLink {
