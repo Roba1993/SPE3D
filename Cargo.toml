@@ -1,5 +1,5 @@
 [package]
-name = "rdm"
+name = "spe3d"
 version = "0.1.0"
 authors = ["roba"]
 
@@ -8,5 +8,18 @@ reqwest = "0.8.1"
 regex = "0.2"
 error-chain = "0.11.0"
 dlc-decrypter = "0.1"
+
+# md5 hasher
 md-5 = "0.7.0"
 digest = { version = "0.7.0", features = ["std"]}
+
+# http server
+rocket = "0.3.3"
+rocket_codegen = "0.3.3"
+rocket_contrib = {version = "0.3.3", default-features = false, features = ["json"]}
+rocket_cors = "0.2.1"
+
+# serialisation of the data
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"

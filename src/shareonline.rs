@@ -81,7 +81,7 @@ impl ShareOnline {
 
         // define the addiotional infos with the premium url
         let mut infos = HashMap::new();
-        infos.insert("premium_url", String::from(&Regex::new(r"URL: ([^\s]+)")?.find(&body).ok_or("No url available")?.as_str()[5..]));
+        infos.insert("premium_url".to_string(), String::from(&Regex::new(r"URL: ([^\s]+)")?.find(&body).ok_or("No url available")?.as_str()[5..]));
 
         let mut f_info = DownloadFile::new();
         // todo check the file status correctly

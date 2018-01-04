@@ -1,0 +1,21 @@
+.box_dragndrop,
+.box_uploading,
+.box_success,
+.box_error {
+  display: none;
+}
+
+.box {
+    background-color: green;
+    color: red;
+}
+
+.has_advanced_upload {
+    background-color: blue;
+    outline: 2px dashed black;
+    outline-offset: -10px;
+  }
+
+.has-advanced-upload .box__dragndrop {
+    display: inline;
+}

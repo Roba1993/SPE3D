@@ -6,7 +6,7 @@ use std::io::Read;
 // counter for the unique id's of the download packages
 static IDCOUNTER: AtomicUsize = AtomicUsize::new(1);
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DownloadPackage {
     id: usize,
     pub name: String,
@@ -27,7 +27,7 @@ impl DownloadPackage {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DownloadFile {
     id: usize,
     pub status: FileStatus,
@@ -36,8 +36,7 @@ pub struct DownloadFile {
     pub url: String,
     pub size: u64,
     pub hash: FileHash,
-    //pub download: Option<Read>,
-    pub infos: HashMap<&'static str, String>
+    pub infos: HashMap<String, String>
 }
 
 impl DownloadFile {
@@ -59,23 +58,24 @@ impl DownloadFile {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum FileHoster {
     Unknown,
     ShareOnline,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum FileStatus {
     Unknown,
-    Online,
     Offline,
+    Online,
+    DownloadQueue,
     Downloading,
     Downloaded,
     WrongHash,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum FileHash {
     None,
     Md5(String),
