@@ -20,7 +20,7 @@ error_chain!{
 }
 
 impl<A> From<::std::sync::PoisonError<A>> for Error {
-    fn from(s: ::std::sync::PoisonError<A>) -> Self {
+    fn from(_s: ::std::sync::PoisonError<A>) -> Self {
         Error::from("PoisnLockError")
     }
 }

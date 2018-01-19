@@ -1,7 +1,5 @@
-use error::*;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::io::Read;
 
 // counter for the unique id's of the download packages
 static IDCOUNTER: AtomicUsize = AtomicUsize::new(1);

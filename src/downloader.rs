@@ -1,5 +1,4 @@
 use error::*;
-use package::DownloadPackage;
 use std::io::Read;
 use md5::{Md5, Digest};
 use std::fs::File;

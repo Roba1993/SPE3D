@@ -1,6 +1,5 @@
 use error::*;
 use std::sync::{Arc, RwLock};
-use std::io::Read;
 use package::{DownloadPackage, FileStatus};
 use shareonline::ShareOnline;
 use std::thread;
@@ -12,7 +11,7 @@ pub struct DownloadManager {
     status: Arc<RwLock<DownloadManagerStatus>>,
     settings: Arc<RwLock<DownloadManagerSettings>>,
     so: Arc<RwLock<ShareOnline>>,
-    downloads: Arc<RwLock<Vec<DownloadPackage>>>,
+    downloads: DownloadList
 }
 
 impl DownloadManager {
@@ -22,7 +21,7 @@ impl DownloadManager {
             status: Arc::new(RwLock::new(DownloadManagerStatus::Running)),
             settings: Arc::new(RwLock::new(DownloadManagerSettings::new())),
             so: Arc::new(RwLock::new(ShareOnline::new(usr, pwd)?)),
-            downloads: Arc::new(RwLock::new(Vec::new())),
+            downloads: DownloadList::new()
         })
     }
 
@@ -35,42 +34,19 @@ impl DownloadManager {
         let dp = DownloadPackage::new(fi.name.clone(), vec!(fi));
 
         // add to links
-        self.downloads.write()?.push(dp);
+        self.downloads.add_package(dp);
 
         Ok(())
     }
 
     /// Get a copy of the download list
     pub fn get_downloads(&self) -> Result<Vec<DownloadPackage>> {
-        Ok(self.downloads.read()?.clone())
+        self.downloads.get_downloads()
     }
 
     /// Start the download of an package, by the id
     pub fn start_download(&self, id: usize) -> Result<()> {
-        let mut dloads = self.downloads.write()?;
-
-        // check if the id exist for a package
-        match dloads.iter().find(|i| i.id() == id) {
-            Some(_) => {
-                // if yes, then set all childrens to the new status
-                dloads.iter_mut().find(|i| i.id() == id).ok_or("The id didn't exist")?.files.iter_mut().for_each(|i| i.status = FileStatus::DownloadQueue);
-            },
-            None => {
-                // if not, check if a link in a apckage with the id exist and set it's status
-                dloads.iter_mut().for_each(|pck| {
-                    match pck.files.iter_mut().find(|i| i.id() == id) {
-                        Some(i) => {
-                            i.status = FileStatus::DownloadQueue
-                        },
-                        None => {
-                            ()
-                        }
-                    }
-                });
-            }
-        };
-
-        Ok(())
+        self.downloads.set_status(id, FileStatus::DownloadQueue)
     }
 
     // start the download manager
@@ -109,12 +85,7 @@ impl DownloadManager {
             let settings = self.settings.read()?.clone();
 
             // get all download id's in queue to start
-            let ids = self.downloads.read()?.iter().map(|pck|
-                    pck.files.iter()
-                    .filter(|i| i.status == FileStatus::DownloadQueue)
-                    .map(|i| i.id()).collect::<Vec<usize>>()
-                ).flat_map(|i| i.into_iter())
-                .collect::<Vec<usize>>();
+            let ids = self.downloads.files_status(FileStatus::DownloadQueue)?;
 
             // start a new download if its available
             if ids.len() > 0 {
@@ -129,26 +100,21 @@ impl DownloadManager {
                 return Ok(());
             }
 
-            // wait 100 ms to continue the loop
+            // wait to continue the loop
             thread::sleep(::std::time::Duration::from_millis(50));
         }
     }
 
-    fn start_download_process(&self, d_id: &usize) -> Result<()> {
+    fn start_download_process(&self, id: &usize) -> Result<()> {
         // define the stream object this thread executes
         let mut stream;
         
         // create the stream
         {
-            let mut downloads = self.downloads.write()?;
+            self.downloads.set_status(id.clone(), FileStatus::Downloading)?;
 
-            let mut file_info = downloads.iter_mut()
-                .flat_map(|i| i.files.iter_mut())
-                .find(|ref i| d_id == &i.id()).ok_or("The can't be found")?;
-
-            file_info.status = FileStatus::Downloading;
-
-            stream = self.so.write()?.download_file(file_info)?;
+            let file = self.downloads.get_file(id)?;
+            stream = self.so.write()?.download_file(file)?;
         }
         
         // start the download
@@ -157,20 +123,14 @@ impl DownloadManager {
         
         // check the download and update the status
         {
-            // writeblock the downloads
-            let mut downloads = self.downloads.write()?;
-
-            // get the right file info
-            let mut file_info = downloads.iter_mut()
-                .flat_map(|i| i.files.iter_mut())
-                .find(|ref i| d_id == &i.id()).ok_or("The can't be found")?;
+            let file = self.downloads.get_file(id)?;
 
             // check if the hash matched
-            if hash == file_info.hash.md5().ok_or("No MD5 hash available")? {
-                file_info.status = FileStatus::Downloaded;
+            if hash == file.hash.md5().ok_or("No MD5 hash available")? {
+                self.downloads.set_status(id.clone(), FileStatus::Downloaded);
             }
             else {
-                file_info.status = FileStatus::WrongHash;
+                self.downloads.set_status(id.clone(), FileStatus::WrongHash);
             }
         }
 
@@ -181,7 +141,7 @@ impl DownloadManager {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DownloadManagerStatus {
     Running,
-    EndAfterDownloads,
+    //EndAfterDownloads,
     EndHard
 }
 
@@ -195,5 +155,94 @@ impl DownloadManagerSettings {
         DownloadManagerSettings {
             max_parallel_downloads: 3,
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct DownloadList {
+    downloads: Arc<RwLock<Vec<DownloadPackage>>>,
+    changes: Arc<RwLock<Vec<usize>>>,
+}
+
+impl DownloadList {
+    /// Create a new Download Manager
+    pub fn new() -> DownloadList {
+        DownloadList {
+            downloads: Arc::new(RwLock::new(Vec::new())),
+            changes: Arc::new(RwLock::new(Vec::new())),
+        }
+    }
+
+    /// Set's the status of an package and all it's childs or a single file by the given id
+    pub fn set_status(&self, id: usize, status: FileStatus) -> Result<()> {
+        let mut dloads = self.downloads.write()?;
+
+        // check if the id exist for a package
+        match dloads.iter().find(|i| i.id() == id) {
+            Some(_) => {
+                // if yes, then set all childrens to the new status
+                dloads.iter_mut().find(|i| i.id() == id).ok_or("The id didn't exist")?.files.iter_mut().for_each(|i| {
+                    i.status = status.clone();
+                    self.add_changed(i.id());    
+                });
+            },
+            None => {
+                // if not, check if a link in a apckage with the id exist and set it's status
+                dloads.iter_mut().for_each(|pck| {
+                    match pck.files.iter_mut().find(|i| i.id() == id) {
+                        Some(i) => {
+                            i.status = status.clone();
+                            self.add_changed(i.id());
+                        },
+                        None => {
+                            ()
+                        }
+                    }
+                });
+            }
+        };
+
+        Ok(())
+    }
+
+    /// Add a new package to the download list
+    pub fn add_package(&self, package: DownloadPackage) -> Result<()> {
+        Ok(self.downloads.write()?.push(package))
+    }
+
+    /// Get a copy of the download list
+    pub fn get_downloads(&self) -> Result<Vec<DownloadPackage>> {
+        Ok(self.downloads.read()?.clone())
+    }
+
+    /// Gives a list of the files with the status back
+    pub fn files_status(&self, status: FileStatus) -> Result<Vec<usize>> {
+        // get all download id's in queue to start
+        let ids = self.downloads.read()?.iter().map(|pck|
+                pck.files.iter()
+                .filter(|i| i.status == status)
+                .map(|i| i.id()).collect::<Vec<usize>>()
+            ).flat_map(|i| i.into_iter())
+            .collect::<Vec<usize>>();
+
+        Ok(ids)
+    }
+
+    pub fn add_changed(&self, id: usize) -> Result<()> {
+        Ok(self.changes.write()?.push(id))
+    }
+
+    pub fn delete_changes(&self) -> Result<Vec<usize>> {
+        let tmp = self.changes.read()?.clone();
+        self.changes.write()?.retain(|_| false);
+        Ok(tmp)
+    }
+
+    pub fn get_file(&self, id: &usize) -> Result<::package::DownloadFile> {
+        let file = self.downloads.read()?.iter()
+                .flat_map(|i| i.files.iter())
+                .find(|ref i| id == &i.id()).ok_or("The can't be found")?.clone();
+
+        Ok(file.clone())
     }
 }

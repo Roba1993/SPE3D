@@ -47,7 +47,7 @@ impl ShareOnline {
         let link = self.download_file_info(url)?;
 
         // start the real download
-        self.download_file(&link)
+        self.download_file(link)
     }
 
     pub fn download_file_info<S: Into<String>>(&self, url: S) -> Result<DownloadFile> {
@@ -96,7 +96,7 @@ impl ShareOnline {
         Ok(f_info)
     }
 
-    pub fn download_file(&self, link: &DownloadFile) -> Result<reqwest::Response> {
+    pub fn download_file(&self, link: DownloadFile) -> Result<reqwest::Response> {
         // set the download header
         let mut headers = reqwest::header::Headers::new();
         headers.set_raw("Cookie", format!("a={}; Expires={}; HttpOnly; Path=/; Domain=.share-online.biz", self.key, self.expire_date));
