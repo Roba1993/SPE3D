@@ -1,43 +1,74 @@
 use error::*;
+use package::{DownloadFile, FileHoster, FileStatus};
+use shareonline::ShareOnline;
 use std::io::Read;
-use md5::{Md5, Digest};
-use std::fs::File;
-use std::io::Write;
+use manager::{DownloadList, DownloadManagerConfig};
+use std::thread;
+use writer::FileWriter;
 
-/// Trait to write a stream of data to a file.
-pub trait FileWriter : Read {
-    /// Function to write a stream of data, to a file
-    /// based on the std::io::Read trait. This functions
-    /// returns as result the hash of the written file.
-    fn write_to_file<S: Into<String>>(&mut self, file: S) -> Result<String> {
-        // define the buffer
-        let mut buffer = [0u8; 32];
-
-        // define the hasher
-        let mut hasher = Md5::new();
-
-        // Create the output file
-        let mut file = File::create(file.into())?;
-
-        // print out the values
-        loop {
-            // read the data from the stream
-            let len = self.read(&mut buffer)?;
-
-            // break if no data is available anymore
-            if len == 0 {
-                break;
-            }
-
-            // sent the data to the file and hasher
-            hasher.input(&buffer[0..len]);
-            file.write(&buffer[0..len]);
-        }
-
-        // return the hash as a string
-        Ok(format!("{:x}", hasher.result()))
-    }
+#[derive(Debug, Clone)]
+pub struct Downloader {
+    config: DownloadManagerConfig,
+    d_list: DownloadList,
+    so_loader: Option<ShareOnline>,
 }
 
-// implement the Download Reader for the reqwest response
-impl FileWriter for ::reqwest::Response{}
+impl Downloader {
+    pub fn new(config: DownloadManagerConfig, d_list: DownloadList) -> Downloader {
+        Downloader {
+            config: config,
+            d_list: d_list,
+            so_loader: ShareOnline::new("96999125025", "wDkEIBdaQ").ok(),
+        }
+    }
+
+    pub fn download(&self, id: usize) {
+        let this = self.clone();
+
+        // new thread for the download
+        thread::spawn(move || {
+            this.internal_download(id).unwrap();
+        });
+    }
+
+    pub fn check<S: Into<String>>(&self, link: S) -> Result<DownloadFile> {
+        let link = link.into();
+
+        // check Share-Online
+        let file_info = match self.so_loader.as_ref() {
+            Some(d) => d.check(link)?,
+            None => None
+        };
+        if file_info.is_some() { return file_info.ok_or(Error::from("File lost")) };
+
+        Err(Error::from("Can't identify file info"))
+    }
+
+    /*************************** Private Functions ************************/
+
+    fn internal_download(&self, id: usize) -> Result<()> {
+        // set the status to downloading
+        self.d_list.set_status(id.clone(), FileStatus::Downloading)?;
+        // get the file info
+        let f_info = self.d_list.get_file(&id)?;
+
+        // get the download stream
+        let mut stream = match f_info.host {
+            FileHoster::ShareOnline => self.so_loader.as_ref().ok_or("Share-Online downloader not available")?.download_file(&f_info),
+            _ => Err(Error::from("Hoster not supported"))
+        }?;
+
+        let hash = stream.write_to_file("./download_content.txt")?;
+        println!("HASH FROM DLOAD: {}", hash);
+
+        // check if the hash matched
+        if hash == f_info.hash.md5().ok_or("No MD5 hash available")? {
+            self.d_list.set_status(id.clone(), FileStatus::Downloaded);
+        }
+        else {
+            self.d_list.set_status(id.clone(), FileStatus::WrongHash);
+        }
+
+        Ok(())
+    }
+}

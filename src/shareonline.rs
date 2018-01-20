@@ -3,6 +3,7 @@ use reqwest;
 use regex::Regex;
 use package::{DownloadFile, FileHash, FileStatus, FileHoster};
 use std::collections::HashMap;
+use std::io::Read;
 
 #[derive(Debug, Clone)]
 pub struct ShareOnline {
@@ -42,12 +43,16 @@ impl ShareOnline {
         })
     }
 
-    pub fn download<S: Into<String>>(&self, url: S) -> Result<reqwest::Response> {
+    pub fn download_link<S: Into<String>>(&self, url: S) -> Result<reqwest::Response> {
         // download the header data
         let link = self.download_file_info(url)?;
 
         // start the real download
-        self.download_file(link)
+        self.download_file(&link)
+    }
+
+    pub fn check<S: Into<String>>(&self, url: S) -> Result<Option<DownloadFile>> {
+        self.download_file_info(url).map(|l| Some(l))
     }
 
     pub fn download_file_info<S: Into<String>>(&self, url: S) -> Result<DownloadFile> {
@@ -96,7 +101,7 @@ impl ShareOnline {
         Ok(f_info)
     }
 
-    pub fn download_file(&self, link: DownloadFile) -> Result<reqwest::Response> {
+    pub fn download_file(&self, link: &DownloadFile) -> Result<reqwest::Response> {
         // set the download header
         let mut headers = reqwest::header::Headers::new();
         headers.set_raw("Cookie", format!("a={}; Expires={}; HttpOnly; Path=/; Domain=.share-online.biz", self.key, self.expire_date));

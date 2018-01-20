@@ -19,6 +19,7 @@ pub mod error;
 pub mod package;
 pub mod shareonline;
 pub mod manager;
+pub mod writer;
 pub mod downloader;
 
 use error::*;
@@ -26,14 +27,19 @@ use rocket::response::NamedFile;
 use rocket::State;
 use rocket_contrib::Json;
 use std::path::Path;
-use manager::DownloadManager;
+use manager::{DownloadManager, DownloadManagerConfig};
 use package::DownloadPackage;
 
 fn main() {
-    let mut dm = DownloadManager::new("96999125025", "wDkEIBdaQ").unwrap();
-    dm.add_link("http://www.share-online.biz/dl/6HE8ZA0PXQM8").unwrap();
+    // create the download manager
+    let config = DownloadManagerConfig::new();
+    let mut dm = DownloadManager::new(config).unwrap();
     dm.start();
 
+    // add a link
+    dm.add_link("http://www.share-online.biz/dl/6HE8ZA0PXQM8").unwrap();
+    
+    // start the rocket webserver
     rocket::ignite()
         .manage(dm)
         .attach(rocket_cors::Cors::default())

@@ -3,50 +3,53 @@ use std::sync::{Arc, RwLock};
 use package::{DownloadPackage, FileStatus};
 use shareonline::ShareOnline;
 use std::thread;
-use downloader::FileWriter;
+use writer::FileWriter;
+use downloader::Downloader;
 
-
+/// Download Manager
+/// 
+/// Shareable struct to access all funtions for the downloads.
 #[derive(Debug, Clone)]
 pub struct DownloadManager {
-    status: Arc<RwLock<DownloadManagerStatus>>,
-    settings: Arc<RwLock<DownloadManagerSettings>>,
-    so: Arc<RwLock<ShareOnline>>,
-    downloads: DownloadList
+    config: DownloadManagerConfig,
+    d_list: DownloadList,
+    downloader: Downloader,
 }
 
 impl DownloadManager {
     /// Create a new Download Manager
-    pub fn new<S: Into<String>>(usr: S, pwd: S) -> Result<DownloadManager> {
+    pub fn new(config: DownloadManagerConfig) -> Result<DownloadManager> {
+        let d_list = DownloadList::new();
+
         Ok(DownloadManager {
-            status: Arc::new(RwLock::new(DownloadManagerStatus::Running)),
-            settings: Arc::new(RwLock::new(DownloadManagerSettings::new())),
-            so: Arc::new(RwLock::new(ShareOnline::new(usr, pwd)?)),
-            downloads: DownloadList::new()
+            config: config.clone(),
+            d_list: d_list.clone(),
+            downloader: Downloader::new(config, d_list),
         })
     }
 
     /// Add a new download link to the manager.
     pub fn add_link<S: Into<String>>(&mut self, url: S) -> Result<()> {
         // download the file info
-        let fi = self.so.read()?.download_file_info(url.into())?;
+        let fi = self.downloader.check(url.into())?;
 
         // create a package for the file
         let dp = DownloadPackage::new(fi.name.clone(), vec!(fi));
 
         // add to links
-        self.downloads.add_package(dp);
+        self.d_list.add_package(dp);
 
         Ok(())
     }
 
     /// Get a copy of the download list
     pub fn get_downloads(&self) -> Result<Vec<DownloadPackage>> {
-        self.downloads.get_downloads()
+        self.d_list.get_downloads()
     }
 
     /// Start the download of an package, by the id
     pub fn start_download(&self, id: usize) -> Result<()> {
-        self.downloads.set_status(id, FileStatus::DownloadQueue)
+        self.d_list.set_status(id, FileStatus::DownloadQueue)
     }
 
     // start the download manager
@@ -62,7 +65,7 @@ impl DownloadManager {
             // run until end or failures reached maximum level
             loop {
                 // run the logic
-                match dm.run() {
+                match dm.internal_loop() {
                     Ok(_) => {
                         break;
                     },
@@ -79,24 +82,18 @@ impl DownloadManager {
     }
 
     /********************* Private Functions *****************/
-    fn run(&self) -> Result<()> {
+    fn internal_loop(&self) -> Result<()> {
         loop {
-            // get the actual local settings as a copy
-            let settings = self.settings.read()?.clone();
-
             // get all download id's in queue to start
-            let ids = self.downloads.files_status(FileStatus::DownloadQueue)?;
+            let ids = self.d_list.files_status(FileStatus::DownloadQueue)?;
 
             // start a new download if its available
             if ids.len() > 0 {
-                let this = self.clone();         
-                thread::spawn(move || {
-                    this.start_download_process(ids.get(0).unwrap()).unwrap();
-                });
+                self.downloader.download(ids.get(0).ok_or("Id is not available anymore")?.clone());
             }
 
             // end hard if defined
-            if self.status.read()?.clone() == DownloadManagerStatus::EndHard {
+            if self.config.get_status()? == DownloadManagerStatus::EndHard {
                 return Ok(());
             }
 
@@ -104,39 +101,30 @@ impl DownloadManager {
             thread::sleep(::std::time::Duration::from_millis(50));
         }
     }
-
-    fn start_download_process(&self, id: &usize) -> Result<()> {
-        // define the stream object this thread executes
-        let mut stream;
-        
-        // create the stream
-        {
-            self.downloads.set_status(id.clone(), FileStatus::Downloading)?;
-
-            let file = self.downloads.get_file(id)?;
-            stream = self.so.write()?.download_file(file)?;
-        }
-        
-        // start the download
-        let hash = stream.write_to_file("./out/new.txt")?;
-        println!("HASH FROM DLOAD: {}", hash);
-        
-        // check the download and update the status
-        {
-            let file = self.downloads.get_file(id)?;
-
-            // check if the hash matched
-            if hash == file.hash.md5().ok_or("No MD5 hash available")? {
-                self.downloads.set_status(id.clone(), FileStatus::Downloaded);
-            }
-            else {
-                self.downloads.set_status(id.clone(), FileStatus::WrongHash);
-            }
-        }
-
-        Ok(())
-    }
 }
+
+/// Download Manager Config
+/// 
+/// All the actual configurations of the download manager are saved here.
+#[derive(Debug, Clone)]
+pub struct DownloadManagerConfig {
+    status: Arc<RwLock<DownloadManagerStatus>>,
+    max_parallel_downloads: Arc<RwLock<usize>>,
+    so_premium_login: Arc<RwLock<Option<(String, String)>>>
+}
+
+impl DownloadManagerConfig {
+    pub fn new() -> DownloadManagerConfig {
+        DownloadManagerConfig {
+            status: Arc::new(RwLock::new(DownloadManagerStatus::Running)),
+            max_parallel_downloads: Arc::new(RwLock::new(3)),
+            so_premium_login: Arc::new(RwLock::new(None)),
+        }
+    }
+
+    pub fn get_status(&self) -> Result<DownloadManagerStatus> {Ok(self.status.read()?.clone())}
+}
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DownloadManagerStatus {
@@ -145,21 +133,12 @@ pub enum DownloadManagerStatus {
     EndHard
 }
 
-#[derive(Debug, Clone)]
-pub struct DownloadManagerSettings {
-    max_parallel_downloads: usize
-}
 
-impl DownloadManagerSettings {
-    pub fn new() -> DownloadManagerSettings {
-        DownloadManagerSettings {
-            max_parallel_downloads: 3,
-        }
-    }
-}
-
+/// Download List
+/// 
+/// Shareable List off all the file informations of the downloads.
 #[derive(Debug, Clone)]
-struct DownloadList {
+pub struct DownloadList {
     downloads: Arc<RwLock<Vec<DownloadPackage>>>,
     changes: Arc<RwLock<Vec<usize>>>,
 }
@@ -228,6 +207,14 @@ impl DownloadList {
         Ok(ids)
     }
 
+    pub fn get_file(&self, id: &usize) -> Result<::package::DownloadFile> {
+        let file = self.downloads.read()?.iter()
+                .flat_map(|i| i.files.iter())
+                .find(|ref i| id == &i.id()).ok_or("The file can't be found")?.clone();
+
+        Ok(file.clone())
+    }
+
     pub fn add_changed(&self, id: usize) -> Result<()> {
         Ok(self.changes.write()?.push(id))
     }
@@ -236,13 +223,5 @@ impl DownloadList {
         let tmp = self.changes.read()?.clone();
         self.changes.write()?.retain(|_| false);
         Ok(tmp)
-    }
-
-    pub fn get_file(&self, id: &usize) -> Result<::package::DownloadFile> {
-        let file = self.downloads.read()?.iter()
-                .flat_map(|i| i.files.iter())
-                .find(|ref i| id == &i.id()).ok_or("The can't be found")?.clone();
-
-        Ok(file.clone())
     }
 }
