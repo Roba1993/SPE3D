@@ -5,11 +5,14 @@ use shareonline::ShareOnline;
 use std::thread;
 use writer::FileWriter;
 use downloader::Downloader;
+use ws;
+use serde_json;
+use serde::Serialize;
 
 /// Download Manager
 /// 
 /// Shareable struct to access all funtions for the downloads.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DownloadManager {
     config: DownloadManagerConfig,
     d_list: DownloadList,
@@ -50,6 +53,11 @@ impl DownloadManager {
     /// Start the download of an package, by the id
     pub fn start_download(&self, id: usize) -> Result<()> {
         self.d_list.set_status(id, FileStatus::DownloadQueue)
+    }
+
+    /// Set a websocket sender to broadcast the changed id's
+    pub fn set_ws_sender(&self, sender: ws::Sender) -> Result<()> {
+        self.d_list.set_ws_sender(sender)
     }
 
     // start the download manager
@@ -137,10 +145,10 @@ pub enum DownloadManagerStatus {
 /// Download List
 /// 
 /// Shareable List off all the file informations of the downloads.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct DownloadList {
     downloads: Arc<RwLock<Vec<DownloadPackage>>>,
-    changes: Arc<RwLock<Vec<usize>>>,
+    ws_sender: Arc<RwLock<Option<ws::Sender>>>,
 }
 
 impl DownloadList {
@@ -148,7 +156,7 @@ impl DownloadList {
     pub fn new() -> DownloadList {
         DownloadList {
             downloads: Arc::new(RwLock::new(Vec::new())),
-            changes: Arc::new(RwLock::new(Vec::new())),
+            ws_sender: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -162,7 +170,7 @@ impl DownloadList {
                 // if yes, then set all childrens to the new status
                 dloads.iter_mut().find(|i| i.id() == id).ok_or("The id didn't exist")?.files.iter_mut().for_each(|i| {
                     i.status = status.clone();
-                    self.add_changed(i.id());    
+                    self.ws_send(&i); 
                 });
             },
             None => {
@@ -171,7 +179,7 @@ impl DownloadList {
                     match pck.files.iter_mut().find(|i| i.id() == id) {
                         Some(i) => {
                             i.status = status.clone();
-                            self.add_changed(i.id());
+                            self.ws_send(&i);   
                         },
                         None => {
                             ()
@@ -207,6 +215,7 @@ impl DownloadList {
         Ok(ids)
     }
 
+    /// Returns a copy of the file info
     pub fn get_file(&self, id: &usize) -> Result<::package::DownloadFile> {
         let file = self.downloads.read()?.iter()
                 .flat_map(|i| i.files.iter())
@@ -215,13 +224,31 @@ impl DownloadList {
         Ok(file.clone())
     }
 
-    pub fn add_changed(&self, id: usize) -> Result<()> {
-        Ok(self.changes.write()?.push(id))
+    /// Add a websocket sender to broadcast the changed id's
+    pub fn set_ws_sender(&self, sender: ws::Sender) -> Result<()> {
+        let mut s = self.ws_sender.write()?;
+        *s = Some(sender);
+        Ok(())
     }
 
-    pub fn delete_changes(&self) -> Result<Vec<usize>> {
-        let tmp = self.changes.read()?.clone();
-        self.changes.write()?.retain(|_| false);
-        Ok(tmp)
+    /// Send the actual status of the file info for the given id to all
+    /// connected websocket clients
+    pub fn ws_send_change(&self, id: usize) -> Result<()> {
+        let f_info = &self.get_file(&id)?;
+        self.ws_send(f_info)
+    }
+
+    /// Send the mesage to all connected websocket clients
+    fn ws_send<T: Serialize>(&self, msg: T) -> Result<()> {
+        let msg = serde_json::to_string(&msg)?;
+
+        match self.ws_sender.read()?.as_ref() {
+            Some(s) => {
+                s.broadcast(msg);
+            },
+            None => {}
+        };
+
+        Ok(())
     }
 }

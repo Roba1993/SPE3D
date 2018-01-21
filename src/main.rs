@@ -10,6 +10,7 @@ extern crate serde_json;
 extern crate rocket;
 extern crate rocket_contrib;
 extern crate rocket_cors;
+extern crate ws;
 extern crate dlc_decrypter;
 extern crate reqwest;
 extern crate regex;
@@ -21,6 +22,7 @@ pub mod shareonline;
 pub mod manager;
 pub mod writer;
 pub mod downloader;
+pub mod websocket;
 
 use error::*;
 use rocket::response::NamedFile;
@@ -35,6 +37,9 @@ fn main() {
     let config = DownloadManagerConfig::new();
     let mut dm = DownloadManager::new(config).unwrap();
     dm.start();
+
+    // start the websocket server and add it to the download manager
+    dm.set_ws_sender(websocket::start_ws()).unwrap();
 
     // add a link
     dm.add_link("http://www.share-online.biz/dl/6HE8ZA0PXQM8").unwrap();

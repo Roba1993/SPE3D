@@ -6,7 +6,7 @@ use manager::{DownloadList, DownloadManagerConfig};
 use std::thread;
 use writer::FileWriter;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Downloader {
     config: DownloadManagerConfig,
     d_list: DownloadList,

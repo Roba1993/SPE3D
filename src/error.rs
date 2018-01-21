@@ -12,6 +12,7 @@ error_chain!{
         Reqwest(::reqwest::Error);
         Regex(::regex::Error);
         ParseIntError(::std::num::ParseIntError);
+        SerdeJson(::serde_json::error::Error);
     }
 
     links{
