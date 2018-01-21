@@ -162,39 +162,41 @@ impl DownloadList {
 
     /// Set's the status of an package and all it's childs or a single file by the given id
     pub fn set_status(&self, id: usize, status: FileStatus) -> Result<()> {
-        let mut dloads = self.downloads.write()?;
+        {
+            let mut dloads = self.downloads.write()?;
 
-        // check if the id exist for a package
-        match dloads.iter().find(|i| i.id() == id) {
-            Some(_) => {
-                // if yes, then set all childrens to the new status
-                dloads.iter_mut().find(|i| i.id() == id).ok_or("The id didn't exist")?.files.iter_mut().for_each(|i| {
-                    i.status = status.clone();
-                    self.ws_send(&i); 
-                });
-            },
-            None => {
-                // if not, check if a link in a apckage with the id exist and set it's status
-                dloads.iter_mut().for_each(|pck| {
-                    match pck.files.iter_mut().find(|i| i.id() == id) {
-                        Some(i) => {
-                            i.status = status.clone();
-                            self.ws_send(&i);   
-                        },
-                        None => {
-                            ()
+            // check if the id exist for a package
+            match dloads.iter().find(|i| i.id() == id) {
+                Some(_) => {
+                    // if yes, then set all childrens to the new status
+                    dloads.iter_mut().find(|i| i.id() == id).ok_or("The id didn't exist")?.files.iter_mut().for_each(|i| {
+                        i.status = status.clone();
+                    });
+                },
+                None => {
+                    // if not, check if a link in a apckage with the id exist and set it's status
+                    dloads.iter_mut().for_each(|pck| {
+                        match pck.files.iter_mut().find(|i| i.id() == id) {
+                            Some(i) => {
+                                i.status = status.clone(); 
+                            },
+                            None => {
+                                ()
+                            }
                         }
-                    }
-                });
-            }
-        };
+                    });
+                }
+            };
+        }
 
+        self.ws_send_change()?;
         Ok(())
     }
 
     /// Add a new package to the download list
     pub fn add_package(&self, package: DownloadPackage) -> Result<()> {
-        Ok(self.downloads.write()?.push(package))
+        self.downloads.write()?.push(package);
+        self.ws_send_change()
     }
 
     /// Get a copy of the download list
@@ -233,8 +235,8 @@ impl DownloadList {
 
     /// Send the actual status of the file info for the given id to all
     /// connected websocket clients
-    pub fn ws_send_change(&self, id: usize) -> Result<()> {
-        let f_info = &self.get_file(&id)?;
+    pub fn ws_send_change(&self) -> Result<()> {
+        let f_info = self.get_downloads()?;
         self.ws_send(f_info)
     }
 

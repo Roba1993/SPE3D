@@ -1,6 +1,5 @@
 import { h, Component } from 'preact';
 import style from './style.css';
-import DropZone from '../../components/dropzone';
 
 export default class AddLinks extends Component {
     state = { links: [] };
@@ -42,7 +41,14 @@ export default class AddLinks extends Component {
                     </form>
                 </div>
                 <div class="column">
-                    <DropZone />
+                <form class={style.form}>
+                    <fieldset>
+                        <label for="file">Select a file</label>
+                        <input type="file" id="file" />
+
+                        <input class="button-primary" type="submit" value="Send" />
+                    </fieldset>
+                    </form>
                 </div>
             </div>
             </div>

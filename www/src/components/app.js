@@ -25,8 +25,18 @@ export default class App extends Component {
 			.then(dloads => this.setState({dloads: dloads}));
 	}
 
+	ws() {
+		var websocket = new WebSocket('ws://localhost:8001');
+		var that = this;
+    	websocket.onmessage = function(evt) { 
+			var obj = JSON.parse(evt.data);
+			that.setState({dloads: obj});
+		};
+	}
+
 	componentDidMount() {
 		this.loadLinks();
+		this.ws();
 	}
 
 	render({}, {dloads}) {
