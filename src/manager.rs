@@ -8,6 +8,7 @@ use downloader::Downloader;
 use ws;
 use serde_json;
 use serde::Serialize;
+use dlc_decrypter::DlcPackage;
 
 /// Download Manager
 /// 
@@ -32,17 +33,21 @@ impl DownloadManager {
     }
 
     /// Add a new download link to the manager.
-    pub fn add_link<S: Into<String>>(&mut self, url: S) -> Result<()> {
+    pub fn add_links<S: Into<String>>(&self, name: S, urls: Vec<String>) -> Result<()> {
         // download the file info
-        let fi = self.downloader.check(url.into())?;
+        let f_infos = urls.into_iter().map(|u| self.downloader.check(u)).filter(|u| u.is_ok()).map(|u| u.unwrap()).collect();
 
         // create a package for the file
-        let dp = DownloadPackage::new(fi.name.clone(), vec!(fi));
+        let dp = DownloadPackage::new(name.into(), f_infos);
 
         // add to links
-        self.d_list.add_package(dp);
+        self.d_list.add_package(dp)
+    }
 
-        Ok(())
+    pub fn add_package<P: Into<DownloadPackage>>(&self, pck: P) -> Result<()> {
+        let mut pck = pck.into();
+        pck.files = pck.files.into_iter().map(|f| self.downloader.check(f.url)).filter(|u| u.is_ok()).map(|u| u.unwrap()).collect();
+        self.d_list.add_package(pck)
     }
 
     /// Get a copy of the download list
@@ -224,6 +229,14 @@ impl DownloadList {
                 .find(|ref i| id == &i.id()).ok_or("The file can't be found")?.clone();
 
         Ok(file.clone())
+    }
+
+    /// Get a package by it's id or it's child id
+    pub fn get_package(&self, id: &usize) -> Result<DownloadPackage> {
+        match self.downloads.read()?.iter().find(|i| &i.id() == id) {
+            Some(i) => Ok(i.clone()),
+            None => Ok(self.downloads.read()?.iter().find(|i| i.files.iter().any(|j| &j.id() == id)).ok_or("No download package available")?.clone())
+        }
     }
 
     /// Add a websocket sender to broadcast the changed id's

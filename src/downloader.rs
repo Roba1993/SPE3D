@@ -51,6 +51,7 @@ impl Downloader {
         self.d_list.set_status(id.clone(), FileStatus::Downloading)?;
         // get the file info
         let f_info = self.d_list.get_file(&id)?;
+        let pck = self.d_list.get_package(&id)?;
 
         // get the download stream
         let mut stream = match f_info.host {
@@ -58,7 +59,8 @@ impl Downloader {
             _ => Err(Error::from("Hoster not supported"))
         }?;
 
-        let hash = stream.write_to_file("./download_content.txt")?;
+        ::std::fs::create_dir_all(format!("./out/{}", pck.name))?;
+        let hash = stream.write_to_file(format!("./out/{}/{}", pck.name, f_info.name))?;
         println!("HASH FROM DLOAD: {}", hash);
 
         // check if the hash matched

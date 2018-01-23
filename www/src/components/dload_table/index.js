@@ -33,7 +33,7 @@ export default class TableDownload extends Component {
                                     )} Byte
                                 </td>
                                 <td></td>
-                                <td><a href="#" onclick={() => {this.start_download(item.id)}} >D</a></td>
+                                <td><a href="#" onclick={(e) => {this.start_download(e, item.id)}} >D</a></td>
                             </tr>
 
                             {item.files.map((item, index) => (

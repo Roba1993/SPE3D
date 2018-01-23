@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use dlc_decrypter::{DlcPackage, DlcLink};
 
 // counter for the unique id's of the download packages
 static IDCOUNTER: AtomicUsize = AtomicUsize::new(1);
@@ -22,6 +23,20 @@ impl DownloadPackage {
 
     pub fn id(&self) -> usize {
         self.id
+    }
+}
+
+impl From<DlcPackage> for DownloadPackage {
+    fn from(dlc: DlcPackage) -> Self {
+        let files = dlc.files.into_iter().map(|i| {
+            let mut f = DownloadFile::new(); 
+            f.url = i.url; 
+            f.name = i.name; 
+            f.size = i.size.parse().unwrap_or(0);
+            f
+        }).collect();
+
+        DownloadPackage::new(dlc.name, files)
     }
 }
 
