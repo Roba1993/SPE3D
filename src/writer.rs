@@ -13,7 +13,7 @@ pub trait FileWriter : Read {
     /// returns as result the hash of the written file.
     fn write_to_file<S: Into<String>>(&mut self, file: S, d_list: DownloadList, id: &usize) -> Result<String> {
         // define the buffer
-        let mut buffer = [0u8; 32];
+        let mut buffer = [0u8; 4096];
         let mut downloaded = 0;
         let mut start = Instant::now();
 
