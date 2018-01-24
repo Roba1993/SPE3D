@@ -94,7 +94,7 @@ impl ShareOnline {
         f_info.host = FileHoster::ShareOnline;
         f_info.name = String::from(&Regex::new(r"NAME: ([^\s]+)")?.find(&body).ok_or("No name available")?.as_str()[6..]);
         f_info.url = url.clone();
-        f_info.size = Regex::new(r"SIZE: ([^\s]+)")?.find(&body).ok_or("No size available")?.as_str()[6..].parse::<u64>()?;
+        f_info.size = Regex::new(r"SIZE: ([^\s]+)")?.find(&body).ok_or("No size available")?.as_str()[6..].parse::<usize>()?;
         f_info.hash = FileHash::Md5(String::from(&Regex::new(r"MD5: ([^\s]+)")?.find(&body).ok_or("No md5 available")?.as_str()[5..]));
         f_info.infos = infos;
 

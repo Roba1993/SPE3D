@@ -6,20 +6,26 @@ use manager::DownloadList;
 use config::Config;
 use std::thread;
 use writer::FileWriter;
+use std::sync::mpsc::channel;
+use std::sync::mpsc::Sender;
+use std::sync::mpsc::Receiver;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct Downloader {
     config: Config,
     d_list: DownloadList,
     so_loader: Option<ShareOnline>,
+    d_updater: DownloadUpdater,
 }
 
 impl Downloader {
     pub fn new(config: Config, d_list: DownloadList) -> Downloader {
-        Downloader {
+         Downloader {
             config: config.clone(),
-            d_list: d_list,
+            d_list: d_list.clone(),
             so_loader: ShareOnline::new(config.get().share_online.unwrap().username, config.get().share_online.unwrap().password).ok(),
+            d_updater: DownloadUpdater::new(d_list),
         }
     }
 
@@ -49,7 +55,7 @@ impl Downloader {
 
     fn internal_download(&self, id: usize) -> Result<()> {
         // set the status to downloading
-        self.d_list.set_status(id.clone(), FileStatus::Downloading(0))?;
+        self.d_list.set_status(id.clone(), FileStatus::Downloading)?;
         // get the file info
         let f_info = self.d_list.get_file(&id)?;
         let pck = self.d_list.get_package(&id)?;
@@ -61,7 +67,7 @@ impl Downloader {
         }?;
 
         ::std::fs::create_dir_all(format!("./out/{}", pck.name))?;
-        let hash = stream.write_to_file(format!("./out/{}/{}", pck.name, f_info.name), self.d_list.clone(), &f_info.id())?;
+        let hash = stream.write_to_file(format!("./out/{}/{}", pck.name, f_info.name), &f_info.id(), self.d_updater.get_sender()?)?;
         println!("HASH FROM DLOAD: {}", hash);
 
         // check if the hash matched
@@ -73,5 +79,46 @@ impl Downloader {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub struct DownloadUpdater {
+    sender: Arc<Mutex<Sender<(usize, usize)>>>,
+    d_list: DownloadList,
+}
+
+impl DownloadUpdater {
+    pub fn new(d_list: DownloadList) -> DownloadUpdater {
+        let (sender, receiver) = channel();
+
+        let updater = DownloadUpdater {
+            sender: Arc::new(Mutex::new(sender)),
+            d_list: d_list,
+        };
+
+        updater.run(receiver);
+
+        updater
+    }
+
+    pub fn get_sender(&self) -> Result<Sender<(usize, usize)>> {
+        Ok(self.sender.lock()?.clone())
+    }
+
+    fn run(&self, receiver: Receiver<(usize, usize)>) {
+        let this = self.clone();
+
+        // new thread for the download
+        thread::spawn(move || {
+            loop {
+                this.handle_update(&receiver);
+            }
+        });
+    }
+
+    fn handle_update(&self, receiver: &Receiver<(usize, usize)>) -> Result<()> {
+        let (id, size) = receiver.recv()?;
+        self.d_list.set_downloaded(id, size)
     }
 }

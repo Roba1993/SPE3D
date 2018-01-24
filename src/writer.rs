@@ -5,13 +5,14 @@ use std::fs::File;
 use std::io::Write;
 use manager::DownloadList;
 use std::time::{Duration, Instant};
+use std::sync::mpsc::Sender;
 
 /// Trait to write a stream of data to a file.
 pub trait FileWriter : Read {
     /// Function to write a stream of data, to a file
     /// based on the std::io::Read trait. This functions
     /// returns as result the hash of the written file.
-    fn write_to_file<S: Into<String>>(&mut self, file: S, d_list: DownloadList, id: &usize) -> Result<String> {
+    fn write_to_file<S: Into<String>>(&mut self, file: S, id: &usize, sender: Sender<(usize, usize)>) -> Result<String> {
         // define the buffer
         let mut buffer = [0u8; 4096];
         let mut downloaded = 0;
@@ -40,7 +41,7 @@ pub trait FileWriter : Read {
             // update the status
             downloaded += len;
             if start.elapsed() > Duration::from_secs(1) {
-                d_list.set_status(id.clone(), ::package::FileStatus::Downloading(downloaded))?;
+                sender.send((id.clone(), downloaded));
                 start = Instant::now();
             }
         }

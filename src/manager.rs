@@ -99,11 +99,12 @@ impl DownloadManager {
     fn internal_loop(&self) -> Result<()> {
         loop {
             // get all download id's in queue to start
-            let ids = self.d_list.files_status(FileStatus::DownloadQueue)?;
+            let qeue = self.d_list.files_status(FileStatus::DownloadQueue)?;
+            let dloads = self.d_list.files_status(FileStatus::Downloading)?;
 
             // start a new download if its available
-            if ids.len() > 0 {
-                self.downloader.download(ids.get(0).ok_or("Id is not available anymore")?.clone());
+            if dloads.len() < 3 && qeue.len() > 0 {
+                self.downloader.download(qeue.get(0).ok_or("Id is not available anymore")?.clone());
             }
 
             // wait to continue the loop
@@ -159,6 +160,18 @@ impl DownloadList {
                 }
             };
         }
+
+        self.ws_send_change()?;
+        Ok(())
+    }
+
+    pub fn set_downloaded(&self, id: usize, size: usize) -> Result<()> {
+        self.downloads.write()?.iter_mut().for_each(|pck| 
+            match pck.files.iter_mut().find(|f| f.id() == id) {
+                Some(i) => i.downloaded = size,
+                None => ()
+            }
+        );
 
         self.ws_send_change()?;
         Ok(())

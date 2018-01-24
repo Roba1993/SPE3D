@@ -12,15 +12,12 @@ export default class TableDownload extends Component {
         .then(function(res){ console.log(res) })
     }
 
-    show_status = (s) => {
-        if(typeof s === "string") {
-            return s;
-        }
-        else if('Downloading' in s) {
-            return this.formatBytes(s["Downloading"], 2) + " downloaded";
+    show_status = (item) => {
+        if(item.status === "Downloading") {
+            return this.formatBytes(item.downloaded, 2) + " downloaded";
         }
         else {
-            return "";
+            return item.status;
         }
     }
 
@@ -64,7 +61,7 @@ export default class TableDownload extends Component {
                                 <tr>
                                     <td>&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;{item.name}</td>
                                     <td>{this.formatBytes(item.size, 2)}</td>
-                                    <td>{this.show_status(item.status)}</td>
+                                    <td>{this.show_status(item)}</td>
                                     <td><a href="#" onclick={(e) => {this.start_download(e, item.id)}} >D</a></td>
                                 </tr>
                             ))}

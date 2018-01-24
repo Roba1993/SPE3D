@@ -47,7 +47,8 @@ pub struct DownloadFile {
     pub host: FileHoster,
     pub name: String,
     pub url: String,
-    pub size: u64,
+    pub size: usize,
+    pub downloaded: usize,
     pub hash: FileHash,
     pub infos: HashMap<String, String>
 }
@@ -61,6 +62,7 @@ impl DownloadFile {
             name: "".to_string(),
             url: "".to_string(),
             size: 0,
+            downloaded: 0,
             hash: FileHash::None,
             infos: HashMap::new(),
         }
@@ -83,7 +85,7 @@ pub enum FileStatus {
     Offline,
     Online,
     DownloadQueue,
-    Downloading(usize),
+    Downloading,
     Downloaded,
     WrongHash,
 }

@@ -14,6 +14,7 @@ error_chain!{
         ParseIntError(::std::num::ParseIntError);
         SerdeJson(::serde_json::error::Error);
         Toml(::toml::de::Error);
+        RecvError(::std::sync::mpsc::RecvError);
     }
 
     links{
@@ -24,5 +25,11 @@ error_chain!{
 impl<A> From<::std::sync::PoisonError<A>> for Error {
     fn from(_s: ::std::sync::PoisonError<A>) -> Self {
         Error::from("PoisnLockError")
+    }
+}
+
+impl<A> From<::std::sync::mpsc::SendError<A>> for Error {
+    fn from(_s: ::std::sync::mpsc::SendError<A>) -> Self {
+        Error::from("SenderError")
     }
 }
