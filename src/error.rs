@@ -13,6 +13,7 @@ error_chain!{
         Regex(::regex::Error);
         ParseIntError(::std::num::ParseIntError);
         SerdeJson(::serde_json::error::Error);
+        Toml(::toml::de::Error);
     }
 
     links{

@@ -9,20 +9,21 @@ use ws;
 use serde_json;
 use serde::Serialize;
 use dlc_decrypter::DlcPackage;
+use config::Config;
 
 /// Download Manager
 /// 
 /// Shareable struct to access all funtions for the downloads.
 #[derive(Clone)]
 pub struct DownloadManager {
-    config: DownloadManagerConfig,
+    config: Config,
     d_list: DownloadList,
     downloader: Downloader,
 }
 
 impl DownloadManager {
     /// Create a new Download Manager
-    pub fn new(config: DownloadManagerConfig) -> Result<DownloadManager> {
+    pub fn new(config: Config) -> Result<DownloadManager> {
         let d_list = DownloadList::new();
 
         Ok(DownloadManager {
@@ -105,45 +106,10 @@ impl DownloadManager {
                 self.downloader.download(ids.get(0).ok_or("Id is not available anymore")?.clone());
             }
 
-            // end hard if defined
-            if self.config.get_status()? == DownloadManagerStatus::EndHard {
-                return Ok(());
-            }
-
             // wait to continue the loop
             thread::sleep(::std::time::Duration::from_millis(50));
         }
     }
-}
-
-/// Download Manager Config
-/// 
-/// All the actual configurations of the download manager are saved here.
-#[derive(Debug, Clone)]
-pub struct DownloadManagerConfig {
-    status: Arc<RwLock<DownloadManagerStatus>>,
-    max_parallel_downloads: Arc<RwLock<usize>>,
-    so_premium_login: Arc<RwLock<Option<(String, String)>>>
-}
-
-impl DownloadManagerConfig {
-    pub fn new() -> DownloadManagerConfig {
-        DownloadManagerConfig {
-            status: Arc::new(RwLock::new(DownloadManagerStatus::Running)),
-            max_parallel_downloads: Arc::new(RwLock::new(3)),
-            so_premium_login: Arc::new(RwLock::new(None)),
-        }
-    }
-
-    pub fn get_status(&self) -> Result<DownloadManagerStatus> {Ok(self.status.read()?.clone())}
-}
-
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum DownloadManagerStatus {
-    Running,
-    //EndAfterDownloads,
-    EndHard
 }
 
 

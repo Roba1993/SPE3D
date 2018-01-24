@@ -7,6 +7,7 @@
 #[macro_use]extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
+extern crate toml;
 extern crate rocket;
 extern crate rocket_contrib;
 extern crate rocket_cors;
@@ -17,6 +18,7 @@ extern crate regex;
 extern crate md5;
 
 pub mod error;
+pub mod config;
 pub mod package;
 pub mod shareonline;
 pub mod manager;
@@ -29,14 +31,17 @@ use rocket::response::NamedFile;
 use rocket::State;
 use rocket_contrib::Json;
 use std::path::Path;
-use manager::{DownloadManager, DownloadManagerConfig};
+use manager::DownloadManager;
 use package::DownloadPackage;
 use regex::Regex;
 use dlc_decrypter::DlcDecoder;
+use config::Config;
 
 fn main() {
+    // load the config file
+    let config = Config::new();
+
     // create the download manager
-    let config = DownloadManagerConfig::new();
     let mut dm = DownloadManager::new(config).unwrap();
     dm.start();
 

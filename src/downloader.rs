@@ -2,23 +2,24 @@ use error::*;
 use package::{DownloadFile, FileHoster, FileStatus};
 use shareonline::ShareOnline;
 use std::io::Read;
-use manager::{DownloadList, DownloadManagerConfig};
+use manager::DownloadList;
+use config::Config;
 use std::thread;
 use writer::FileWriter;
 
 #[derive(Clone)]
 pub struct Downloader {
-    config: DownloadManagerConfig,
+    config: Config,
     d_list: DownloadList,
     so_loader: Option<ShareOnline>,
 }
 
 impl Downloader {
-    pub fn new(config: DownloadManagerConfig, d_list: DownloadList) -> Downloader {
+    pub fn new(config: Config, d_list: DownloadList) -> Downloader {
         Downloader {
-            config: config,
+            config: config.clone(),
             d_list: d_list,
-            so_loader: ShareOnline::new("96999125025", "wDkEIBdaQ").ok(),
+            so_loader: ShareOnline::new(config.get().share_online.unwrap().username, config.get().share_online.unwrap().password).ok(),
         }
     }
 

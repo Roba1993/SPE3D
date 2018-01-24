@@ -1,0 +1,66 @@
+use error::*;
+use std::fs::File;
+use std::io::Read;
+use std::sync::{Arc, RwLock};
+use std::ops::Deref;
+use toml;
+
+#[derive(Debug, Clone)]
+pub struct Config {
+    data: Arc<RwLock<ConfigData>>
+}
+
+impl Config {
+    pub fn new() -> Config {
+        let data = match ConfigData::from_config_file() {
+            Ok(c) => c,
+            Err(_) => ConfigData::default()
+        };
+
+        Config {
+            data: Arc::new(RwLock::new(data))
+        }
+    }
+
+    pub fn get(&self) -> ConfigData {
+        match self.data.read() {
+            Ok(c) => c.clone(),
+            Err(_) => ConfigData::default()
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ConfigData {
+    pub webserver_port: usize,
+    pub websocket_port: usize,
+
+    pub share_online: Option<ConfigShareOnline>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ConfigShareOnline {
+    pub username: String,
+    pub password: String,
+}
+
+impl ConfigData {
+    fn from_config_file() -> Result<ConfigData> {
+        let mut config_text = String::new();
+        let mut config_file = File::open("./config/config.toml")?;
+        config_file.read_to_string(&mut config_text)?;
+
+        Ok(toml::from_str::<ConfigData>(&config_text)?)
+    }
+}
+
+impl Default for ConfigData {
+    fn default() -> ConfigData { 
+        ConfigData {
+            webserver_port: 8000,
+            websocket_port: 8001,
+
+            share_online: None
+        }
+    }
+}

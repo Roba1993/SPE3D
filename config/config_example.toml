@@ -1,0 +1,7 @@
+# SPE3D - Configuration
+webserver_port = 8000
+websocket_port = 8001
+
+[share_online]
+username = 'usr'
+password = 'pwd'

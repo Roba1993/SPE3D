@@ -3,6 +3,9 @@
 ### Project Specific ###
 out/*
 !out/.gitkeep
+config/*
+!config/.gitkeep
+!config/config_example.toml
 
 ### Linux ###
 *~
