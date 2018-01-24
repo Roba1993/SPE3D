@@ -48,7 +48,7 @@ impl Downloader {
 
     fn internal_download(&self, id: usize) -> Result<()> {
         // set the status to downloading
-        self.d_list.set_status(id.clone(), FileStatus::Downloading)?;
+        self.d_list.set_status(id.clone(), FileStatus::Downloading(0))?;
         // get the file info
         let f_info = self.d_list.get_file(&id)?;
         let pck = self.d_list.get_package(&id)?;
@@ -60,7 +60,7 @@ impl Downloader {
         }?;
 
         ::std::fs::create_dir_all(format!("./out/{}", pck.name))?;
-        let hash = stream.write_to_file(format!("./out/{}/{}", pck.name, f_info.name))?;
+        let hash = stream.write_to_file(format!("./out/{}/{}", pck.name, f_info.name), self.d_list.clone(), &f_info.id())?;
         println!("HASH FROM DLOAD: {}", hash);
 
         // check if the hash matched

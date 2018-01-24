@@ -30,6 +30,7 @@ export default class App extends Component {
 		var that = this;
     	websocket.onmessage = function(evt) { 
 			var obj = JSON.parse(evt.data);
+			console.log(obj);
 			that.setState({dloads: obj});
 		};
 	}

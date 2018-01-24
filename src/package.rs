@@ -83,7 +83,7 @@ pub enum FileStatus {
     Offline,
     Online,
     DownloadQueue,
-    Downloading,
+    Downloading(usize),
     Downloaded,
     WrongHash,
 }
