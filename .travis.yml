@@ -1,0 +1,15 @@
+sudo: false
+services:
+- docker
+language: rust
+rust:
+- nightly
+cache: cargo
+before_script:
+- git clone https://github.com/Roba1993/SPE3D.git
+- docker pull clux/muslrust
+script:
+- cargo test
+- docker run --rm -v $PWD:/volume -w /volume -t clux/muslrust cargo build --release
+- docker build -t spe3d .
+- docker run -d -p 8000:80 --name=spe3d -t spe3d
