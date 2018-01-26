@@ -7,7 +7,7 @@ rust:
 cache: cargo
 before_script:
 - git clone https://github.com/Roba1993/SPE3D.git
-- docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+- docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 - docker pull roba1993/spe3d
 script:
 - cargo test
