@@ -61,12 +61,12 @@ fn main() {
 
 #[get("/")]
 fn index() -> ::std::io::Result<NamedFile> {
-    NamedFile::open("www/build/index.html")
+    NamedFile::open("www/index.html")
 }
 
 #[get("/<file>")]
 fn files(file: String) -> Option<NamedFile> {
-    NamedFile::open(Path::new("www/build/").join(file)).ok()
+    NamedFile::open(Path::new("www/").join(file)).ok()
 }
 
 #[get("/api/downloads")]

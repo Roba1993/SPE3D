@@ -1,11 +1,16 @@
 # Created by https://www.gitignore.io/api/osx,node,rust,linux,windows,sublimetext,visualstudiocode
 
 ### Project Specific ###
+# General folder
 out/*
 !out/.gitkeep
 config/*
 !config/.gitkeep
 !config/config_example.toml
+
+# Frontend
+frontend/build
+
 
 ### Linux ###
 *~

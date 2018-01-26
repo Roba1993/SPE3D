@@ -1,9 +1,15 @@
 PWD:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-normal:
+normal: frontend
 	cargo build --release
 
-docker:
+.PHONY: frontend
+frontend:
+	cd frontend && npm run build
+	rm -rf www/*
+	cp -r frontend/build/* www/
+
+docker: frontend
 	docker pull clux/muslrust
 	docker run -v cargo-cache:/root/.cargo -v "$(PWD):/volume" --rm -it clux/muslrust cargo build --release
 	docker build -t spe3d .
