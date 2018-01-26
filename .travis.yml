@@ -7,13 +7,13 @@ rust:
 cache: cargo
 before_script:
 - git clone https://github.com/Roba1993/SPE3D.git
-- docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-#- docker pull roba1993/spe3d
+- docker login -u="roba1993" -p="$DOCKER_PASSWORD"
+- docker pull clux/muslrust
 script:
 - cargo test
 - docker run --rm -v $PWD:/volume -w /volume -t clux/muslrust cargo build --release
-- docker build -t spe3d .
-- docker run -d -p 8000:80 --name=spe3d -t spe3d
+- docker build -t roba1993/spe3d .
+- docker run -d -p 8000:80 --name=spe3d -t roba1993/spe3d
 after_success:
 - docker push roba1993/spe3d
 after_script:
