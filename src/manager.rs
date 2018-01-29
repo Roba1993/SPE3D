@@ -1,14 +1,11 @@
 use error::*;
 use std::sync::{Arc, RwLock};
 use package::{DownloadPackage, FileStatus};
-use shareonline::ShareOnline;
 use std::thread;
-use writer::FileWriter;
 use downloader::Downloader;
 use ws;
 use serde_json;
 use serde::Serialize;
-use dlc_decrypter::DlcPackage;
 use config::Config;
 
 /// Download Manager

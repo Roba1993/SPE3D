@@ -13,9 +13,10 @@ before_script:
 script:
 - cargo test
 - make docker
-#- docker run --rm -v $PWD:/volume -w /volume -t clux/muslrust cargo build --release
-#- docker build -t roba1993/spe3d .
-- docker run -d -p 8000:80 --name=spe3d -t roba1993/spe3d
+- docker run -d -p 8000:8000 --name=spe3d -t roba1993/spe3d
+- sleep 1
+- curl -sSL localhost:8000 | grep "Success"
+- docker rm -f spe3d
 after_success:
 - docker push roba1993/spe3d
 after_script:

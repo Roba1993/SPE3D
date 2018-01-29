@@ -36,6 +36,7 @@ use package::DownloadPackage;
 use regex::Regex;
 use dlc_decrypter::DlcDecoder;
 use config::Config;
+use std::thread;
 
 fn main() {
     // load the config file
@@ -46,17 +47,26 @@ fn main() {
     dm.start();
 
     // start the websocket server and add it to the download manager
-    dm.set_ws_sender(websocket::start_ws()).unwrap();
+    //dm.set_ws_sender(websocket::start_ws()).unwrap();
 
     // add a link
     dm.add_links("MOD 1080 Example", vec!("http://www.share-online.biz/dl/6HE8ZA0PXQM8".to_string())).unwrap();
+
+    thread::spawn(move || {
+        thread::sleep_ms(1000);
+        let mut r = reqwest::get("http://127.0.0.1:8000/api/test").unwrap();
+
+        println!("Response: {:?}", r.text());
+    });
     
     // start the rocket webserver
     rocket::ignite()
         .manage(dm)
         .attach(rocket_cors::Cors::default())
-        .mount("/", routes![api_start_download, api_downloads, api_add_links, api_add_dlc, index, files])
+        .mount("/", routes![api_test, api_start_download, api_downloads, api_add_links, api_add_dlc, index, files])
         .launch();
+
+    println!("END");
 }
 
 #[get("/")]
@@ -67,6 +77,11 @@ fn index() -> ::std::io::Result<NamedFile> {
 #[get("/<file>")]
 fn files(file: String) -> Option<NamedFile> {
     NamedFile::open(Path::new("www/").join(file)).ok()
+}
+
+#[get("/api/test")]
+fn api_test() -> String {
+    "Success".to_string()
 }
 
 #[get("/api/downloads")]

@@ -24,7 +24,8 @@ impl Downloader {
          Downloader {
             config: config.clone(),
             d_list: d_list.clone(),
-            so_loader: ShareOnline::new(config.get().share_online.unwrap().username, config.get().share_online.unwrap().password).ok(),
+            //so_loader: ShareOnline::new(config.get().share_online.unwrap().username, config.get().share_online.unwrap().password).ok(),
+            so_loader: None,
             d_updater: DownloadUpdater::new(d_list),
         }
     }
