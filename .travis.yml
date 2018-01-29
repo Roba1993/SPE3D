@@ -15,7 +15,7 @@ script:
 - make docker
 - docker run -d -p 8000:8000 --name=spe3d -t roba1993/spe3d
 - sleep 1
-- curl -sSL localhost:8000 | grep "Success"
+- curl -X GET localhost:8000/api/test | grep "Success"
 - docker rm -f spe3d
 after_success:
 - docker push roba1993/spe3d
