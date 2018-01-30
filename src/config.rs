@@ -4,6 +4,7 @@ use std::io::Read;
 use std::sync::{Arc, RwLock};
 use std::ops::Deref;
 use toml;
+use std::convert::From;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -30,8 +31,21 @@ impl Config {
     }
 }
 
+impl From<Config> for ::rocket::Config {
+    fn from(data: Config) -> Self {
+        let data = data.get();
+        let builder = ::rocket::config::ConfigBuilder::new(::rocket::config::Environment::Staging);
+
+        builder
+            .address(data.webserver_ip)
+            .port(data.webserver_port as u16)
+            .expect("The rocket configuration is bad!")
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConfigData {
+    pub webserver_ip: String,
     pub webserver_port: usize,
     pub websocket_port: usize,
 
@@ -57,6 +71,7 @@ impl ConfigData {
 impl Default for ConfigData {
     fn default() -> ConfigData { 
         ConfigData {
+            webserver_ip: "0.0.0.0".to_string(),
             webserver_port: 8000,
             websocket_port: 8001,
 
@@ -64,3 +79,4 @@ impl Default for ConfigData {
         }
     }
 }
+

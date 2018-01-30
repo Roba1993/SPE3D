@@ -37,13 +37,14 @@ use regex::Regex;
 use dlc_decrypter::DlcDecoder;
 use config::Config;
 use std::thread;
+use std::convert::From;
 
 fn main() {
     // load the config file
     let config = Config::new();
 
     // create the download manager
-    let mut dm = DownloadManager::new(config).unwrap();
+    let mut dm = DownloadManager::new(config.clone()).unwrap();
     dm.start();
 
     // start the websocket server and add it to the download manager
@@ -60,7 +61,7 @@ fn main() {
     });
     
     // start the rocket webserver
-    rocket::ignite()
+    rocket::custom(config.into(), true)
         .manage(dm)
         .attach(rocket_cors::Cors::default())
         .mount("/", routes![api_test, api_start_download, api_downloads, api_add_links, api_add_dlc, index, files])
