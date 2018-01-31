@@ -891,6 +891,12 @@ var add_links__ref3 = Object(preact_min["h"])(
 );
 
 var _ref4 = Object(preact_min["h"])(
+    'p',
+    null,
+    'Example link: http://www.share-online.biz/dl/6HE8ZA0PXQM8'
+);
+
+var _ref5 = Object(preact_min["h"])(
     'label',
     { 'for': 'file' },
     'Select a file'
@@ -1007,7 +1013,8 @@ var add_links_AddLinks = function (_Component) {
                             }),
                             Object(preact_min["h"])('input', { 'class': 'button-primary', type: 'submit', value: 'Send', onclick: this.send_links })
                         )
-                    )
+                    ),
+                    _ref4
                 ),
                 Object(preact_min["h"])(
                     'div',
@@ -1018,7 +1025,7 @@ var add_links_AddLinks = function (_Component) {
                         Object(preact_min["h"])(
                             'fieldset',
                             null,
-                            _ref4,
+                            _ref5,
                             Object(preact_min["h"])('input', { type: 'file', id: 'file', onChange: this.set_file }),
                             Object(preact_min["h"])('input', { 'class': 'button-primary', type: 'submit', value: 'Send', onclick: this.send_file })
                         )
@@ -1057,7 +1064,7 @@ var app__ref3 = Object(preact_min["h"])(header_Header, null);
 
 var app__ref4 = Object(preact_min["h"])(add_links_AddLinks, { path: '/add-links' });
 
-var _ref5 = Object(preact_min["h"])(profile_Profile, { path: '/profile/', user: 'me' });
+var app__ref5 = Object(preact_min["h"])(profile_Profile, { path: '/profile/', user: 'me' });
 
 var _ref6 = Object(preact_min["h"])(profile_Profile, { path: '/profile/:user' });
 
@@ -1125,7 +1132,7 @@ var app_App = function (_Component) {
 				{ onChange: this.handleRoute },
 				Object(preact_min["h"])(home_Home, { path: '/', dloads: dloads }),
 				app__ref4,
-				_ref5,
+				app__ref5,
 				_ref6
 			)
 		);

@@ -7,6 +7,8 @@ use ws;
 use serde_json;
 use serde::Serialize;
 use config::Config;
+use std::fs::File;
+use std::io::prelude::*;
 
 /// Download Manager
 /// 
@@ -123,10 +125,20 @@ pub struct DownloadList {
 impl DownloadList {
     /// Create a new Download Manager
     pub fn new() -> DownloadList {
-        DownloadList {
+        // create the download list
+        let d_list = DownloadList {
             downloads: Arc::new(RwLock::new(Vec::new())),
             ws_sender: Arc::new(RwLock::new(None)),
-        }
+        };
+
+        // load the previous state from file
+        match d_list.load() {
+            Ok(_) => {},
+            Err(_) => {println!("Can't read previus status of the download list")}
+        };
+
+        // return the download list
+        d_list
     }
 
     /// Set's the status of an package and all it's childs or a single file by the given id
@@ -159,7 +171,7 @@ impl DownloadList {
         }
 
         self.ws_send_change()?;
-        Ok(())
+        self.save()
     }
 
     pub fn set_downloaded(&self, id: usize, size: usize) -> Result<()> {
@@ -177,7 +189,8 @@ impl DownloadList {
     /// Add a new package to the download list
     pub fn add_package(&self, package: DownloadPackage) -> Result<()> {
         self.downloads.write()?.push(package);
-        self.ws_send_change()
+        self.ws_send_change()?;
+        self.save()
     }
 
     /// Get a copy of the download list
@@ -239,6 +252,24 @@ impl DownloadList {
             },
             None => {}
         };
+
+        Ok(())
+    }
+
+    fn save(&self) -> Result<()> {
+        let d_list = ::serde_json::to_string_pretty(&self.get_downloads()?)?;
+        let mut file = File::create("./config/status.json")?;
+        file.write_all(&d_list.into_bytes())?;
+
+        Ok(())
+    }
+
+    fn load(&self) -> Result<()> {
+        let file = File::open("./config/status.json")?;       
+        let d_list : Vec<DownloadPackage> = ::serde_json::from_reader(file)?;
+        for p in d_list {
+            self.add_package(p)?;
+        }
 
         Ok(())
     }

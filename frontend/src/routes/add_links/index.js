@@ -82,6 +82,7 @@ export default class AddLinks extends Component {
                         <input class="button-primary" type="submit" value="Send" onclick={this.send_links}/>
                     </fieldset>
                     </form>
+                    <p>Example link: http://www.share-online.biz/dl/6HE8ZA0PXQM8</p>
                 </div>
                 <div class="column">
                 <form class={style.form}>

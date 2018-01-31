@@ -107,6 +107,7 @@ impl ShareOnline {
 
     pub fn download_file(&mut self, link: &DownloadFile) -> Result<reqwest::Response> {
         self.login()?;
+        let link = self.download_file_info(link.url.clone())?;
 
         // set the download header
         let mut headers = reqwest::header::Headers::new();

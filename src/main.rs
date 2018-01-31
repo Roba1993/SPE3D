@@ -48,9 +48,6 @@ fn main() {
 
     // start the websocket server and add it to the download manager
     dm.set_ws_sender(websocket::start_ws()).unwrap();
-
-    // add a link
-    dm.add_links("MOD 1080 Example", vec!("http://www.share-online.biz/dl/6HE8ZA0PXQM8".to_string())).unwrap();
     
     // start the rocket webserver
     rocket::custom(config.into(), true)
