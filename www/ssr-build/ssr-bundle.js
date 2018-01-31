@@ -1087,7 +1087,7 @@ var app_App = function (_Component) {
 	App.prototype.loadLinks = function loadLinks() {
 		var _this2 = this;
 
-		fetch('http://localhost:8000/api/downloads').then(function (r) {
+		fetch('http://' + window.location.hostname + ':8000/api/downloads').then(function (r) {
 			return r.json();
 		})
 		//.then(links => console.log(links))
@@ -1097,7 +1097,7 @@ var app_App = function (_Component) {
 	};
 
 	App.prototype.ws = function ws() {
-		var websocket = new WebSocket('ws://localhost:8001');
+		var websocket = new WebSocket('ws://' + window.location.hostname + ':8001');
 		var that = this;
 		websocket.onmessage = function (evt) {
 			var obj = JSON.parse(evt.data);

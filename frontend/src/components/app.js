@@ -20,13 +20,13 @@ export default class App extends Component {
 	};
 
 	loadLinks() {
-		fetch(`http://localhost:8000/api/downloads`).then(r => r.json())
+		fetch(`http://`+window.location.hostname+`:8000/api/downloads`).then(r => r.json())
 			//.then(links => console.log(links))
 			.then(dloads => this.setState({dloads: dloads}));
 	}
 
 	ws() {
-		var websocket = new WebSocket('ws://localhost:8001');
+		var websocket = new WebSocket('ws://'+window.location.hostname+':8001');
 		var that = this;
     	websocket.onmessage = function(evt) { 
 			var obj = JSON.parse(evt.data);

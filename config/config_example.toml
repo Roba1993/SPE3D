@@ -1,4 +1,9 @@
 # SPE3D - Configuration
+
+# ip under the webserver should be started
+# If you run locally it's localhost or 127.0.0.1
+# If you run in docker it's 0.0.0.0
+webserver_ip = 'localhost'
 webserver_port = 8000
 websocket_port = 8001
 
