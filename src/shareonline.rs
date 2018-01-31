@@ -3,20 +3,27 @@ use reqwest;
 use regex::Regex;
 use package::{DownloadFile, FileHash, FileStatus, FileHoster};
 use std::collections::HashMap;
-use std::io::Read;
+use config::Config;
 
 #[derive(Debug, Clone)]
 pub struct ShareOnline {
-    usr: String,
-    pwd: String,
+    config: Config,
     expire_date: String,
     key: String,
 }
 
 impl ShareOnline {
-    pub fn new<S: Into<String>>(usr: S, pwd: S) -> Result<ShareOnline> {
-        let usr = usr.into();
-        let pwd = pwd.into();
+    pub fn new (config: Config) -> ShareOnline {
+        ShareOnline {
+            config: config,
+            expire_date: "".into(),
+            key: "".into()
+        }
+    }
+
+    pub fn login(&mut self) -> Result<()> {
+        let usr = self.config.get().share_online.ok_or("No share-online logins defined")?.username;
+        let pwd = self.config.get().share_online.ok_or("No share-online logins defined")?.password;
 
         // download the user data
         let login_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=userDetails", usr, pwd);
@@ -31,19 +38,13 @@ impl ShareOnline {
         let body = resp.text()?;
 
         // extract the user key and expire date
-        let key = String::from(&Regex::new(r"a=(\w+)")?.find(&body).ok_or("No user key available")?.as_str()[2..]);
-        let expire_date = String::from(&Regex::new(r"expire_date=(\w+)")?.find(&body).ok_or("No expire date available")?.as_str()[12..]);
+        self.key = String::from(&Regex::new(r"a=(\w+)")?.find(&body).ok_or("No user key available")?.as_str()[2..]);
+        self.expire_date = String::from(&Regex::new(r"expire_date=(\w+)")?.find(&body).ok_or("No expire date available")?.as_str()[12..]);
 
-        // return the successfull struct
-        Ok(ShareOnline{
-            usr: usr,
-            pwd: pwd,
-            expire_date: expire_date,
-            key: key,
-        })
+        Ok(())
     }
 
-    pub fn download_link<S: Into<String>>(&self, url: S) -> Result<reqwest::Response> {
+    pub fn download_link<S: Into<String>>(&mut self, url: S) -> Result<reqwest::Response> {
         // download the header data
         let link = self.download_file_info(url)?;
 
@@ -69,8 +70,11 @@ impl ShareOnline {
             bail!("The given link wasn't a share-online download link");
         }
         
+        let usr = self.config.get().share_online.ok_or("No share-online logins defined")?.username;
+        let pwd = self.config.get().share_online.ok_or("No share-online logins defined")?.password;
+
         // make the request call
-        let info_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=download&lid={}", self.usr, self.pwd, id);
+        let info_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=download&lid={}", usr, pwd, id);
         let mut resp = reqwest::get(&info_url)?;
 
         // only continue if the answer was successfull
@@ -101,7 +105,9 @@ impl ShareOnline {
         Ok(f_info)
     }
 
-    pub fn download_file(&self, link: &DownloadFile) -> Result<reqwest::Response> {
+    pub fn download_file(&mut self, link: &DownloadFile) -> Result<reqwest::Response> {
+        self.login()?;
+
         // set the download header
         let mut headers = reqwest::header::Headers::new();
         headers.set_raw("Cookie", format!("a={}; Expires={}; HttpOnly; Path=/; Domain=.share-online.biz", self.key, self.expire_date));
@@ -121,42 +127,5 @@ impl ShareOnline {
 
         // return the result
         Ok(resp)
-    }
-}
-
-pub struct ShareOnlineLink {
-    pub link: String,
-    pub id: String,
-    pub status: String,
-    pub url: String,
-    pub name: String,
-    pub size: u64,
-    pub md5: String
-}
-
-impl ShareOnlineLink {
-    fn new<S: Into<String>>(url: S) -> Result<ShareOnlineLink> {
-        // split the url and id
-        let url = url.into();
-        let res: Vec<&str> = url.split("/dl/").collect();
-
-        // check if the values are valid
-        let link : &str = res.get(0).ok_or("Can't find the share-online host in the link")?;
-        let id = res.get(1).ok_or("Can't find a download id in the link")?;
-
-        if link != "http://www.share-online.biz" && link != "https://www.share-online.biz" {
-            bail!("The given link wasn't a share-online download link");
-        }
-
-        // return the link struct
-        Ok(ShareOnlineLink {
-            link: url.clone(),
-            id: id.to_string(),
-            status: String::new(),
-            url: String::new(),
-            name: String::new(),
-            size: 0,
-            md5: String::new(),
-        })
     }
 }

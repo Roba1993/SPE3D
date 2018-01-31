@@ -1,7 +1,6 @@
 use error::*;
 use package::{DownloadFile, FileHoster, FileStatus};
 use shareonline::ShareOnline;
-use std::io::Read;
 use manager::DownloadList;
 use config::Config;
 use std::thread;
@@ -15,7 +14,7 @@ use std::sync::{Arc, Mutex};
 pub struct Downloader {
     config: Config,
     d_list: DownloadList,
-    so_loader: Option<ShareOnline>,
+    so_loader: ShareOnline,
     d_updater: DownloadUpdater,
 }
 
@@ -24,8 +23,7 @@ impl Downloader {
          Downloader {
             config: config.clone(),
             d_list: d_list.clone(),
-            //so_loader: ShareOnline::new(config.get().share_online.unwrap().username, config.get().share_online.unwrap().password).ok(),
-            so_loader: None,
+            so_loader: ShareOnline::new(config),
             d_updater: DownloadUpdater::new(d_list),
         }
     }
@@ -43,10 +41,7 @@ impl Downloader {
         let link = link.into();
 
         // check Share-Online
-        let file_info = match self.so_loader.as_ref() {
-            Some(d) => d.check(link)?,
-            None => None
-        };
+        let file_info = self.so_loader.check(link)?;
         if file_info.is_some() { return file_info.ok_or(Error::from("File lost")) };
 
         Err(Error::from("Can't identify file info"))
@@ -63,7 +58,7 @@ impl Downloader {
 
         // get the download stream
         let mut stream = match f_info.host {
-            FileHoster::ShareOnline => self.so_loader.as_ref().ok_or("Share-Online downloader not available")?.download_file(&f_info),
+            FileHoster::ShareOnline => self.so_loader.clone().download_file(&f_info),
             _ => Err(Error::from("Hoster not supported"))
         }?;
 
@@ -73,10 +68,10 @@ impl Downloader {
 
         // check if the hash matched
         if hash == f_info.hash.md5().ok_or("No MD5 hash available")? {
-            self.d_list.set_status(id.clone(), FileStatus::Downloaded);
+            self.d_list.set_status(id.clone(), FileStatus::Downloaded)?;
         }
         else {
-            self.d_list.set_status(id.clone(), FileStatus::WrongHash);
+            self.d_list.set_status(id.clone(), FileStatus::WrongHash)?;
         }
 
         Ok(())
@@ -113,7 +108,10 @@ impl DownloadUpdater {
         // new thread for the download
         thread::spawn(move || {
             loop {
-                this.handle_update(&receiver);
+                match this.handle_update(&receiver) {
+                    Ok(_) => {},
+                    Err(e) => {println!("{}", e)}
+                }
             }
         });
     }

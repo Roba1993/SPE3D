@@ -4,7 +4,7 @@ use ws;
 
 pub fn start_ws() -> ws::Sender {
     // Create simple websocket that just prints out messages
-    let mut me = ws::WebSocket::new(|_| {
+    let me = ws::WebSocket::new(|_| {
         move |msg| {
             Ok(println!("Peer got message: {}", msg))
         }

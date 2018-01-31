@@ -2,7 +2,6 @@ use error::*;
 use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, RwLock};
-use std::ops::Deref;
 use toml;
 use std::convert::From;
 

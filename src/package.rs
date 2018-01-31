@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use dlc_decrypter::{DlcPackage, DlcLink};
+use dlc_decrypter::DlcPackage;
 
 // counter for the unique id's of the download packages
 static IDCOUNTER: AtomicUsize = AtomicUsize::new(1);

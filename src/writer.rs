@@ -3,7 +3,6 @@ use std::io::Read;
 use md5::{Md5, Digest};
 use std::fs::File;
 use std::io::Write;
-use manager::DownloadList;
 use std::time::{Duration, Instant};
 use std::sync::mpsc::Sender;
 
@@ -41,7 +40,7 @@ pub trait FileWriter : Read {
             // update the status
             downloaded += len;
             if start.elapsed() > Duration::from_secs(1) {
-                sender.send((id.clone(), downloaded));
+                sender.send((id.clone(), downloaded))?;
                 start = Instant::now();
             }
         }

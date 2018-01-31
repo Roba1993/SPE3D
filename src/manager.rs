@@ -235,7 +235,7 @@ impl DownloadList {
 
         match self.ws_sender.read()?.as_ref() {
             Some(s) => {
-                s.broadcast(msg);
+                s.broadcast(msg)?;
             },
             None => {}
         };
