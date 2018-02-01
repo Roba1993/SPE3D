@@ -47,7 +47,7 @@ fn main() {
     dm.start();
 
     // start the websocket server and add it to the download manager
-    dm.set_ws_sender(websocket::start_ws()).unwrap();
+    dm.set_ws_sender(websocket::start_ws(config.clone())).unwrap();
     
     // start the rocket webserver
     rocket::custom(config.into(), true)

@@ -930,7 +930,7 @@ var add_links_AddLinks = function (_Component) {
             console.log(_this.state.links);
         }, _this.send_links = function (e) {
             e.preventDefault();
-            fetch("http://localhost:8000/api/add-links", {
+            fetch("http://" + window.location.hostname + ":8000/api/add-links", {
                 method: "POST",
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
@@ -949,7 +949,7 @@ var add_links_AddLinks = function (_Component) {
             var formData = new FormData();
             formData.append('file', _this.state.file);
 
-            fetch("http://localhost:8000/api/add-dlc", {
+            fetch("http://" + window.location.hostname + ":8000/api/add-dlc", {
                 method: "POST",
                 headers: {
                     'Accept': 'application/json, text/plain, */*',

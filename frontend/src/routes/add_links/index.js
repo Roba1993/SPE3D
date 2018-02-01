@@ -30,7 +30,7 @@ export default class AddLinks extends Component {
 
     send_links = (e) => {
         e.preventDefault();
-        fetch("http://localhost:8000/api/add-links",
+        fetch("http://"+window.location.hostname+":8000/api/add-links",
         {
             method: "POST",
             headers: {
@@ -53,7 +53,7 @@ export default class AddLinks extends Component {
         var formData = new FormData();
         formData.append('file', this.state.file);
 
-        fetch("http://localhost:8000/api/add-dlc",
+        fetch("http://"+window.location.hostname+":8000/api/add-dlc",
         {
             method: "POST",
             headers: {

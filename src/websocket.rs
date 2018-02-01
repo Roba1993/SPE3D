@@ -1,8 +1,9 @@
 use std::thread;
+use config::Config;
 use ws;
 
 
-pub fn start_ws() -> ws::Sender {
+pub fn start_ws(config: Config) -> ws::Sender {
     // Create simple websocket that just prints out messages
     let me = ws::WebSocket::new(|_| {
         move |msg| {
@@ -13,8 +14,10 @@ pub fn start_ws() -> ws::Sender {
     // Get a sender for ALL connections to the websocket
     let broacaster = me.broadcaster();
 
+    let host = format!("{}:{}", config.get().webserver_ip, config.get().websocket_port);
+
     thread::spawn(move || {
-        me.listen("127.0.0.1:8001").unwrap();
+        me.listen(host).unwrap();
     });
 
     broacaster
