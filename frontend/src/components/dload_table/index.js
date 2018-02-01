@@ -5,7 +5,7 @@ export default class TableDownload extends Component {
 
     start_download = (e, id) => {
         e.preventDefault();
-        fetch("http://localhost:8000/api/start-download/"+id,
+        fetch("http://"+window.location.hostname+":8000/api/start-download/"+id,
         {
             method: "POST"
         })

@@ -600,7 +600,7 @@ var dload_table_TableDownload = function (_Component) {
 
         return _ret = (_temp = (_this = dload_table__possibleConstructorReturn(this, _Component.call.apply(_Component, [this].concat(args))), _this), _this.start_download = function (e, id) {
             e.preventDefault();
-            fetch("http://localhost:8000/api/start-download/" + id, {
+            fetch("http://" + window.location.hostname + ":8000/api/start-download/" + id, {
                 method: "POST"
             }).then(function (res) {
                 console.log(res);
