@@ -5,6 +5,13 @@ use dlc_decrypter::DlcPackage;
 // counter for the unique id's of the download packages
 static IDCOUNTER: AtomicUsize = AtomicUsize::new(1);
 
+pub fn set_idcounter(id: usize) {
+    if id > IDCOUNTER.load(Ordering::Relaxed) {
+        IDCOUNTER.store(id, Ordering::Relaxed);
+        IDCOUNTER.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DownloadPackage {
     id: usize,

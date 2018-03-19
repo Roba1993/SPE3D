@@ -9,6 +9,7 @@ use serde::Serialize;
 use config::Config;
 use std::fs::File;
 use std::io::prelude::*;
+use package;
 
 /// Download Manager
 /// 
@@ -228,6 +229,14 @@ impl DownloadList {
         }
     }
 
+    /// Return the highest id of the download list
+    pub fn get_high_id(&self) -> Result<usize> {
+        Ok(self.downloads.read()?.iter()
+            .map(|x| x.id())
+            .collect::<Vec<usize>>().iter().max()
+            .unwrap_or(&1).clone())
+    }
+
     /// Add a websocket sender to broadcast the changed id's
     pub fn set_ws_sender(&self, sender: ws::Sender) -> Result<()> {
         let mut s = self.ws_sender.write()?;
@@ -257,7 +266,7 @@ impl DownloadList {
     }
 
     fn save(&self) -> Result<()> {
-        let d_list = ::serde_json::to_string_pretty(&self.get_downloads()?)?;
+        let d_list = ::serde_json::to_string_pretty(&(self.get_high_id()?, self.get_downloads()?))?;
         let mut file = File::create("./config/status.json")?;
         file.write_all(&d_list.into_bytes())?;
 
@@ -266,7 +275,10 @@ impl DownloadList {
 
     fn load(&self) -> Result<()> {
         let file = File::open("./config/status.json")?;       
-        let d_list : Vec<DownloadPackage> = ::serde_json::from_reader(file)?;
+        let (id, d_list) : (usize, Vec<DownloadPackage>) = ::serde_json::from_reader(file)?;
+        
+        package::set_idcounter(id);
+
         for p in d_list {
             self.add_package(p)?;
         }
