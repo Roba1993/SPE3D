@@ -56,7 +56,7 @@ export default class AddLinks extends Component {
             
             {this.state.links.map((item, index) => (
                 <div key={index}>
-                    <Icon name='remove' size="big" /><Input label='http://' placeholder="http://www.share-online.biz/some-id" onChange={(e) => {this.change_link(index, e)}} />
+                    <Input label='http://' placeholder="http://www.share-online.biz/some-id" onChange={(e) => {this.change_link(index, e)}} /><Icon name='remove' size="big" />
                 </div>
             ))}
 

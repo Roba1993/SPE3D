@@ -95,21 +95,9 @@ fn api_add_links(dm: State<DownloadManager>, json: Json<serde_json::Value>) -> R
 
 #[post("/api/add-dlc", data = "<data>")]
 fn api_add_dlc(dm: State<DownloadManager>, data: String) -> Result<()> {
-    // find the indentifier
-    let re = Regex::new(r"-*\d*")?;
-    let ident = re.find(&data).ok_or("No file data")?.as_str();
-
-    // find the file start
-    let re = Regex::new(r"\r\n\r\n")?;
-    let start = re.find(&data).ok_or("No start")?.end();
-
-    // find the file end
-    let re = Regex::new(&format!("(\r\n{})",&ident))?;
-    let end = re.find(&data).ok_or("No end")?.start();
-
     // extract the dlc package
     let dlc = DlcDecoder::new();
-    let pck = dlc.from_data(&data[start..end].as_bytes())?;
+    let pck = dlc.from_data(data.as_bytes())?;
 
     // add it to the manager
     dm.add_package(pck)

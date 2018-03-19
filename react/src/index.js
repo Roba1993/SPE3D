@@ -6,7 +6,7 @@ import {
   HashRouter as Router,
   Route,
   Link
-} from 'react-router-dom'
+} from 'react-router-dom';
 
 
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react'
