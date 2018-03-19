@@ -5,9 +5,9 @@ normal: frontend
 
 .PHONY: frontend
 frontend:
-	cd frontend && npm install && npm run build
+	cd react && npm install && npm run build
 	rm -rf www/*
-	cp -r frontend/build/* www/
+	cp -r react/dist/ www/
 
 docker: frontend
 	docker pull clux/muslrust
