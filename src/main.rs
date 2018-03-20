@@ -95,7 +95,7 @@ fn api_add_links(dm: State<DownloadManager>, json: Json<serde_json::Value>) -> R
 #[post("/api/add-dlc", data = "<data>")]
 fn api_add_dlc(dm: State<DownloadManager>, data: String) -> Result<()> {
     match tmp(dm, data) {
-        Ok(_) => {println!("Added DLC", e); Ok(())},
+        Ok(_) => {println!("Added DLC"); Ok(())},
         Err(e) => {println!("Error: {:?}", e); Err(e)}
     }
 }

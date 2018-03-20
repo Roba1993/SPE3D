@@ -12,6 +12,7 @@ config/*
 .cache
 package-lock.json
 react/dist
+www
 
 
 ### Linux ###
