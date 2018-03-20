@@ -9,8 +9,9 @@ config/*
 !config/config_example.toml
 
 # Frontend
-frontend/build
 .cache
+package-lock.json
+react/dist
 
 
 ### Linux ###

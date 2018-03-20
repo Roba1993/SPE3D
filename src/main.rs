@@ -33,7 +33,6 @@ use rocket_contrib::Json;
 use std::path::Path;
 use manager::DownloadManager;
 use package::DownloadPackage;
-use regex::Regex;
 use dlc_decrypter::DlcDecoder;
 use config::Config;
 use std::convert::From;
