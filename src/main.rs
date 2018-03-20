@@ -94,6 +94,13 @@ fn api_add_links(dm: State<DownloadManager>, json: Json<serde_json::Value>) -> R
 
 #[post("/api/add-dlc", data = "<data>")]
 fn api_add_dlc(dm: State<DownloadManager>, data: String) -> Result<()> {
+    match tmp(dm, data) {
+        Ok(_) => {println!("Added DLC", e); Ok(())},
+        Err(e) => {println!("Error: {:?}", e); Err(e)}
+    }
+}
+
+fn tmp(dm: State<DownloadManager>, data: String) -> Result<()> {
     // extract the dlc package
     let dlc = DlcDecoder::new();
     let pck = dlc.from_data(data.as_bytes())?;
