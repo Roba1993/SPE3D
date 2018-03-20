@@ -6,7 +6,8 @@ normal: frontend
 .PHONY: frontend
 frontend:
 	cd react && npm install && npm run build
-	rm -rf www/*
+	rm -rf www/
+	mkdir -p www/
 	cp -r react/dist/* www/
 
 docker: frontend
