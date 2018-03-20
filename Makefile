@@ -13,3 +13,11 @@ docker: frontend
 	docker pull clux/muslrust
 	docker run -v cargo-cache:/root/.cargo -v "$(PWD):/volume" --rm -it clux/muslrust cargo build --release
 	docker build -t roba1993/spe3d .
+
+.PHONY: docker-run
+docker-run:
+	docker run -t -p 127.0.0.1:8000:8000 -p 127.0.0.1:8001:8001 -v $(PWD)/config:/config -v $(PWD)/out:/out --name=spe3d -t roba1993/spe3d
+
+.PHONY: docker-rm
+docker-rm:
+	docker rm --force spe3d
