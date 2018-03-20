@@ -7,11 +7,12 @@ rust:
 cache: cargo
 before_script:
 - sudo apt-get install nodejs npm
+- npm --version
 - git clone https://github.com/Roba1993/SPE3D.git
 - docker login -u="roba1993" -p="$DOCKER_PASSWORD"
 #- docker pull clux/muslrust
 script:
-- cargo test
+#- cargo test
 - make docker
 - docker run -d -p 127.0.0.1:8000:8000 --name=spe3d -t roba1993/spe3d
 - sleep 1
