@@ -37,6 +37,7 @@ use package::DownloadPackage;
 use dlc_decrypter::DlcDecoder;
 use config::Config;
 use std::convert::From;
+use error_chain::ChainedError;
 
 fn main() {
     // load the config file
