@@ -100,18 +100,24 @@ fn api_add_links(dm: State<DownloadManager>, json: Json<serde_json::Value>) -> R
 #[post("/api/add-dlc", data = "<data>")]
 #[allow(needless_pass_by_value)]
 fn api_add_dlc(dm: State<DownloadManager>, data: String) -> Result<()> {
-    match tmp(&dm, &data) {
+    println!("DLC UPLOAD => START");
+    let t = match tmp(&dm, &data) {
         Ok(_) => {println!("Added DLC"); Ok(())},
         Err(e) => {println!("{}", e.display_chain().to_string()); Err(e)}
-    }
+    };
+    println!("DLC UPLOAD => END");
+    t
 }
 
 fn tmp(dm: &State<DownloadManager>, data: &str) -> Result<()> {
     // extract the dlc package
+    println!("DLC UPLOAD => CREATE DLC");
     let dlc = DlcDecoder::new();
+    println!("DLC UPLOAD => CREATE PCK");
     let pck = dlc.from_data(data.as_bytes())?;
 
     // add it to the manager
+    println!("DLC UPLOAD => ADD PCK");
     dm.add_package(pck)?;
 
     Ok(())
