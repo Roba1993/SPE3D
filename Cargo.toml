@@ -4,10 +4,10 @@ version = "0.1.0"
 authors = ["roba"]
 
 [dependencies]
-reqwest = "0.8.2"
+reqwest = "0.8.5"
 regex = "0.2.5"
 error-chain = "0.11.0"
-dlc-decrypter = "0.1"
+dlc-decrypter = { git = "https://github.com/Roba1993/dlc-decoder" }
 clippy = "0.0.189"
 
 # md5 hasher
