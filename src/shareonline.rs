@@ -15,7 +15,7 @@ pub struct ShareOnline {
 impl ShareOnline {
     pub fn new (config: Config) -> ShareOnline {
         ShareOnline {
-            config: config,
+            config,
             expire_date: "".into(),
             key: "".into()
         }
@@ -53,7 +53,7 @@ impl ShareOnline {
     }
 
     pub fn check<S: Into<String>>(&self, url: S) -> Result<Option<DownloadFile>> {
-        self.download_file_info(url).map(|l| Some(l))
+        self.download_file_info(url).map(Some)
     }
 
     pub fn download_file_info<S: Into<String>>(&self, url: S) -> Result<DownloadFile> {

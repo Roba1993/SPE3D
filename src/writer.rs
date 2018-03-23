@@ -35,12 +35,12 @@ pub trait FileWriter : Read {
 
             // sent the data to the file and hasher
             hasher.input(&buffer[0..len]);
-            file.write(&buffer[0..len])?;
+            file.write_all(&buffer[0..len])?;
 
             // update the status
             downloaded += len;
             if start.elapsed() > Duration::from_secs(1) {
-                sender.send((id.clone(), downloaded))?;
+                sender.send((*id, downloaded))?;
                 start = Instant::now();
             }
         }

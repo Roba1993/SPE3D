@@ -3,11 +3,12 @@ use config::Config;
 use ws;
 
 
-pub fn start_ws(config: Config) -> ws::Sender {
+pub fn start_ws(config: &Config) -> ws::Sender {
     // Create simple websocket that just prints out messages
     let me = ws::WebSocket::new(|_| {
         move |msg| {
-            Ok(println!("Peer got message: {}", msg))
+            println!("Peer got message: {}", msg);
+            Ok(())
         }
     }).unwrap();
 

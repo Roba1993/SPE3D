@@ -2,6 +2,7 @@
 #![feature(const_atomic_usize_new)]
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
+#![plugin(clippy)]
 
 #[macro_use] extern crate error_chain;
 #[macro_use]extern crate serde_derive;
@@ -46,7 +47,7 @@ fn main() {
     dm.start();
 
     // start the websocket server and add it to the download manager
-    dm.set_ws_sender(websocket::start_ws(config.clone())).unwrap();
+    dm.set_ws_sender(websocket::start_ws(&config)).unwrap();
     
     // start the rocket webserver
     rocket::custom(config.into(), true)
@@ -72,16 +73,19 @@ fn api_test() -> String {
 }
 
 #[get("/api/downloads")]
+#[allow(needless_pass_by_value)]
 fn api_downloads(dm: State<DownloadManager>) -> Result<Json<Vec<DownloadPackage>>> {
     Ok(Json(dm.get_downloads()?))
 }
 
 #[post("/api/start-download/<id>")]
+#[allow(needless_pass_by_value)]
 fn api_start_download(dm: State<DownloadManager>, id: usize) -> Result<()> {
     dm.start_download(id)
 }
 
 #[post("/api/add-links", data = "<json>")]
+#[allow(needless_pass_by_value)]
 fn api_add_links(dm: State<DownloadManager>, json: Json<serde_json::Value>) -> Result<()> {
     // add the links as a package
     dm.add_links(
@@ -93,18 +97,21 @@ fn api_add_links(dm: State<DownloadManager>, json: Json<serde_json::Value>) -> R
 }
 
 #[post("/api/add-dlc", data = "<data>")]
+#[allow(needless_pass_by_value)]
 fn api_add_dlc(dm: State<DownloadManager>, data: String) -> Result<()> {
-    match tmp(dm, data) {
+    match tmp(&dm, &data) {
         Ok(_) => {println!("Added DLC"); Ok(())},
         Err(e) => {println!("Error: {:?}", e); Err(e)}
     }
 }
 
-fn tmp(dm: State<DownloadManager>, data: String) -> Result<()> {
+fn tmp(dm: &State<DownloadManager>, data: &str) -> Result<()> {
     // extract the dlc package
     let dlc = DlcDecoder::new();
     let pck = dlc.from_data(data.as_bytes())?;
 
     // add it to the manager
-    dm.add_package(pck)
+    dm.add_package(pck)?;
+
+    Ok(())
 }

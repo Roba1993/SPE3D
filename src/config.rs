@@ -5,7 +5,7 @@ use std::sync::{Arc, RwLock};
 use toml;
 use std::convert::From;
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct Config {
     data: Arc<RwLock<ConfigData>>
 }

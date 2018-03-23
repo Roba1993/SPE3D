@@ -24,7 +24,7 @@ impl DownloadPackage {
         DownloadPackage {
             id: IDCOUNTER.fetch_add(1, Ordering::SeqCst),
             name: name.into(),
-            files: files
+            files
         }
     }
 
@@ -47,7 +47,7 @@ impl From<DlcPackage> for DownloadPackage {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct DownloadFile {
     id: usize,
     pub status: FileStatus,
@@ -75,6 +75,10 @@ impl DownloadFile {
         }
     }
 
+    pub fn default() -> Self {
+        Self::new()
+    }
+
     pub fn id(&self) -> usize {
         self.id
     }
@@ -86,7 +90,13 @@ pub enum FileHoster {
     ShareOnline,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+impl Default for FileHoster {
+    fn default() -> Self {
+        FileHoster::Unknown
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Copy)]
 pub enum FileStatus {
     Unknown,
     Offline,
@@ -95,6 +105,12 @@ pub enum FileStatus {
     Downloading,
     Downloaded,
     WrongHash,
+}
+
+impl Default for FileStatus {
+    fn default() -> Self {
+        FileStatus::Unknown
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -109,5 +125,11 @@ impl FileHash {
             FileHash::Md5(h) => Some(h.clone()),
             _ => None
         }
+    }
+}
+
+impl Default for FileHash {
+    fn default() -> Self {
+        FileHash::None
     }
 }

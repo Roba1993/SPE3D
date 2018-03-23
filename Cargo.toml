@@ -8,6 +8,7 @@ reqwest = "0.8.2"
 regex = "0.2.5"
 error-chain = "0.11.0"
 dlc-decrypter = "0.1"
+clippy = "0.0.189"
 
 # md5 hasher
 md-5 = "0.7.0"

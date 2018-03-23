@@ -42,7 +42,9 @@ impl Downloader {
 
         // check Share-Online
         let file_info = self.so_loader.check(link)?;
-        if file_info.is_some() { return file_info.ok_or(Error::from("File lost")) };
+        if file_info.is_some() { 
+            return file_info.ok_or_else(|| Error::from("File lost")) 
+        };
 
         Err(Error::from("Can't identify file info"))
     }
@@ -51,7 +53,7 @@ impl Downloader {
 
     fn internal_download(&self, id: usize) -> Result<()> {
         // set the status to downloading
-        self.d_list.set_status(id.clone(), FileStatus::Downloading)?;
+        self.d_list.set_status(id, &FileStatus::Downloading)?;
         // get the file info
         let f_info = self.d_list.get_file(&id)?;
         let pck = self.d_list.get_package(&id)?;
@@ -68,10 +70,10 @@ impl Downloader {
 
         // check if the hash matched
         if hash == f_info.hash.md5().ok_or("No MD5 hash available")? {
-            self.d_list.set_status(id.clone(), FileStatus::Downloaded)?;
+            self.d_list.set_status(id, &FileStatus::Downloaded)?;
         }
         else {
-            self.d_list.set_status(id.clone(), FileStatus::WrongHash)?;
+            self.d_list.set_status(id, &FileStatus::WrongHash)?;
         }
 
         Ok(())
@@ -90,7 +92,7 @@ impl DownloadUpdater {
 
         let updater = DownloadUpdater {
             sender: Arc::new(Mutex::new(sender)),
-            d_list: d_list,
+            d_list,
         };
 
         updater.run(receiver);

@@ -58,7 +58,7 @@ impl DownloadManager {
 
     /// Start the download of an package, by the id
     pub fn start_download(&self, id: usize) -> Result<()> {
-        self.d_list.set_status(id, FileStatus::DownloadQueue)
+        self.d_list.set_status(id, &FileStatus::DownloadQueue)
     }
 
     /// Set a websocket sender to broadcast the changed id's
@@ -85,7 +85,7 @@ impl DownloadManager {
                     },
                     Err(_) => {
                         // exit when we reached max number of errors
-                        failures += failures + 1;
+                        failures += 1;
                         if failures > 10 {
                             break;
                         }
@@ -103,7 +103,7 @@ impl DownloadManager {
             let dloads = self.d_list.files_status(FileStatus::Downloading)?;
 
             // start a new download if its available
-            if dloads.len() < 3 && qeue.len() > 0 {
+            if dloads.len() < 3 && !qeue.is_empty() {
                 self.downloader.download(qeue.get(0).ok_or("Id is not available anymore")?.clone());
             }
 
@@ -117,7 +117,7 @@ impl DownloadManager {
 /// Download List
 /// 
 /// Shareable List off all the file informations of the downloads.
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct DownloadList {
     downloads: Arc<RwLock<Vec<DownloadPackage>>>,
     ws_sender: Arc<RwLock<Option<ws::Sender>>>,
@@ -143,7 +143,7 @@ impl DownloadList {
     }
 
     /// Set's the status of an package and all it's childs or a single file by the given id
-    pub fn set_status(&self, id: usize, status: FileStatus) -> Result<()> {
+    pub fn set_status(&self, id: usize, status: &FileStatus) -> Result<()> {
         {
             let mut dloads = self.downloads.write()?;
 
@@ -152,19 +152,14 @@ impl DownloadList {
                 Some(_) => {
                     // if yes, then set all childrens to the new status
                     dloads.iter_mut().find(|i| i.id() == id).ok_or("The id didn't exist")?.files.iter_mut().for_each(|i| {
-                        i.status = status.clone();
+                        i.status = *status;
                     });
                 },
                 None => {
                     // if not, check if a link in a apckage with the id exist and set it's status
                     dloads.iter_mut().for_each(|pck| {
-                        match pck.files.iter_mut().find(|i| i.id() == id) {
-                            Some(i) => {
-                                i.status = status.clone(); 
-                            },
-                            None => {
-                                ()
-                            }
+                        if let Some(i) = pck.files.iter_mut().find(|i| i.id() == id) {
+                            i.status = *status; 
                         }
                     });
                 }
@@ -177,9 +172,8 @@ impl DownloadList {
 
     pub fn set_downloaded(&self, id: usize, size: usize) -> Result<()> {
         self.downloads.write()?.iter_mut().for_each(|pck| 
-            match pck.files.iter_mut().find(|f| f.id() == id) {
-                Some(i) => i.downloaded = size,
-                None => ()
+            if let Some(i) = pck.files.iter_mut().find(|f| f.id() == id) { 
+                i.downloaded = size 
             }
         );
 
@@ -216,7 +210,7 @@ impl DownloadList {
     pub fn get_file(&self, id: &usize) -> Result<::package::DownloadFile> {
         let file = self.downloads.read()?.iter()
                 .flat_map(|i| i.files.iter())
-                .find(|ref i| id == &i.id()).ok_or("The file can't be found")?.clone();
+                .find(|i| id == &i.id()).ok_or("The file can't be found")?.clone();
 
         Ok(file.clone())
     }
@@ -231,10 +225,28 @@ impl DownloadList {
 
     /// Return the highest id of the download list
     pub fn get_high_id(&self) -> Result<usize> {
-        Ok(self.downloads.read()?.iter()
+        let biggest_child = self.downloads.read()?.iter().map(|pck|
+                pck.files.iter()
+                .map(|i| i.id()).collect::<Vec<usize>>()
+            ).flat_map(|i| i.into_iter())
+            .collect::<Vec<usize>>();
+
+        let biggest_child = biggest_child.iter().max().unwrap_or(&1);
+
+        let biggest_parent = self.downloads.read()?.iter()
             .map(|x| x.id())
-            .collect::<Vec<usize>>().iter().max()
-            .unwrap_or(&1).clone())
+            .collect::<Vec<usize>>();
+
+        let biggest_parent = biggest_parent.iter().max().unwrap_or(&1);
+
+        Ok(
+            if biggest_child > biggest_parent {
+                *biggest_child
+            }
+            else {
+                *biggest_parent
+            }
+        )
     }
 
     /// Add a websocket sender to broadcast the changed id's
@@ -255,12 +267,9 @@ impl DownloadList {
     fn ws_send<T: Serialize>(&self, msg: T) -> Result<()> {
         let msg = serde_json::to_string(&msg)?;
 
-        match self.ws_sender.read()?.as_ref() {
-            Some(s) => {
-                s.broadcast(msg)?;
-            },
-            None => {}
-        };
+        if let Some(s) = self.ws_sender.read()?.as_ref() {
+            s.broadcast(msg)?;
+        }
 
         Ok(())
     }
