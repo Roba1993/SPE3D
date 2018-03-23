@@ -225,20 +225,21 @@ impl DownloadList {
 
     /// Return the highest id of the download list
     pub fn get_high_id(&self) -> Result<usize> {
+        // get the highest child id
         let biggest_child = self.downloads.read()?.iter().map(|pck|
                 pck.files.iter()
                 .map(|i| i.id()).collect::<Vec<usize>>()
             ).flat_map(|i| i.into_iter())
             .collect::<Vec<usize>>();
-
         let biggest_child = biggest_child.iter().max().unwrap_or(&1);
 
+        // get the highest parent id
         let biggest_parent = self.downloads.read()?.iter()
             .map(|x| x.id())
             .collect::<Vec<usize>>();
-
         let biggest_parent = biggest_parent.iter().max().unwrap_or(&1);
 
+        // return the highest number
         Ok(
             if biggest_child > biggest_parent {
                 *biggest_child
