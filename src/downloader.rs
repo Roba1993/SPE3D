@@ -68,6 +68,9 @@ impl Downloader {
         let hash = stream.write_to_file(format!("./out/{}/{}", pck.name, f_info.name), &f_info.id(), self.d_updater.get_sender()?)?;
         println!("HASH FROM DLOAD: {}", hash);
 
+        // set the downloaded attribute to the size, because all is downloaded
+        self.d_list.set_downloaded(f_info.id(), f_info.size)?;
+
         // check if the hash matched
         if hash == f_info.hash.md5().ok_or("No MD5 hash available")? {
             self.d_list.set_status(id, &FileStatus::Downloaded)?;

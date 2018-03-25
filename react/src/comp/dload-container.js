@@ -55,12 +55,12 @@ export default class DloadContainer extends Component {
             <Segment onClick={(e) => { this.change_open(e) }}>
                 <Grid columns='equal'>
                     <Grid.Column computer={1} mobile={4} style={styleCenter}>
-                        <Button circular color='green' size='huge' icon='cloud download' />
+                        <Button circular color='green' size='huge' icon='cloud download' onClick={(e) => {this.start_download(e, c.id)}} />
                     </Grid.Column>
                     <Grid.Column computer={5} mobile={12} centered='true'>
                         <div style={styleText}>
                             <div style={styleName}>{c.name}</div>
-                            <div style={stylePercent}>{complete}%</div>
+                            <div style={stylePercent}>{complete.toFixed(0)}%</div>
                         </div>
                         <Progress percent={complete} indicating style={{ marginBottom: '0' }} />
                     </Grid.Column>
@@ -86,12 +86,12 @@ export default class DloadContainer extends Component {
                             <Header as='h3' onClick={(e) => { this.change_open(e) }}>{">"}</Header>
                         </Grid.Column>
                         <Grid.Column computer={1} mobile={4} style={styleCenter}>
-                            <Button circular color='green' size='huge' icon='cloud download' />
+                            <Button circular color='green' size='huge' icon='cloud download' onClick={(e) => {this.start_download(e, item.id)}}/>
                         </Grid.Column>
                         <Grid.Column computer={4} mobile={12} centered='true'>
                             <div style={styleText}>
-                                <div style={styleName}>Harry Potter und der Stein der Weisen</div>
-                                <div style={stylePercent}>{item.downloaded / item.size * 100}%</div>
+                                <div style={styleName}>{item.name}</div>
+                                <div style={stylePercent}>{(item.downloaded / item.size * 100).toFixed(0)}%</div>
                             </div>
                             <Progress percent={item.downloaded / item.size * 100} indicating style={{ marginBottom: '0' }} />
                         </Grid.Column>
