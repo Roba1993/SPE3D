@@ -14,7 +14,6 @@ export default class Links extends Component {
                     <AddFile />
                 </Grid.Column>
             </Grid.Row>
-
         </Grid>
     }
 }

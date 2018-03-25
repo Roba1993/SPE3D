@@ -2,13 +2,7 @@ import 'semantic-ui-css/semantic.min.css';
 
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
-import {
-  HashRouter as Router,
-  Route,
-  Link
-} from 'react-router-dom';
-
-
+import {HashRouter as Router, Route, Link} from 'react-router-dom';
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
 import DownloadList from './comp/download-list';
 import Home from './view/home';
@@ -41,16 +35,19 @@ class App extends Component {
     render () {
         return <Router>
                 <Sidebar.Pushable as={Page}>
-                    <Sidebar as={Menu} animation='push' direction='top' visible={true} inverted>
+                    <Sidebar as={Menu} animation='push' direction='top' visible={true} size='large'>
+                        <Menu.Item name='name'>
+                            <Header as='h2' style={styleMenu}>SPE3D</Header>
+                        </Menu.Item>
                         <Menu.Item name='home'>
-                            <Link to="/"><Icon name='home' /> Home</Link>
+                            <Link to="/" style={styleMenu}><Icon name='home' /> Home</Link>
                         </Menu.Item>
                         <Menu.Item name='links'>
-                            <Link to="/links"><Icon name='write' />Links</Link>
+                            <Link to="/links" style={styleMenu}><Icon name='write' />Links</Link>
                         </Menu.Item>
                     </Sidebar>
                     <Sidebar.Pusher>
-                        <Segment basic>
+                        <Segment basic style={styleSegment}>
                             <Route exact path="/" render={()=><Home dloads={this.state.dloads}/>}/>
                             <Route path="/links" render={()=><Links/>}/>
                         </Segment>
@@ -67,5 +64,14 @@ class Page extends Component {
         </div>
     }
 }
+
+const styleMenu = {
+    color: '#00ca34'
+}
+
+const styleSegment = {
+    marginTop: '25px'
+}
+
 
 ReactDOM.render(<App />, document.getElementById('app'))
