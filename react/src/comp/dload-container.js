@@ -48,8 +48,9 @@ export default class DloadContainer extends Component {
         var size_raw = c.files.reduce((pre, curr) => pre + curr.size, 0);
         var size = this.formatBytes(size_raw, 2);
         var loaded_raw = c.files.reduce((pre, curr) => pre + curr.downloaded, 0);
-        var complete = loaded_raw / size_raw * 100;
+        var complete = (loaded_raw / size_raw * 100).toFixed(0);
         var downloaded = c.files.reduce((pre, curr) => (curr.status == "Downloaded")? pre+=1: pre , 0);
+        var indi = c.files.some(f => f.status == "Downloading");
 
         return <Segment.Group>
             <Segment onClick={(e) => { this.change_open(e) }}>
@@ -60,9 +61,9 @@ export default class DloadContainer extends Component {
                     <Grid.Column computer={5} mobile={12} centered='true'>
                         <div style={styleText}>
                             <div style={styleName}>{c.name}</div>
-                            <div style={stylePercent}>{complete.toFixed(0)}%</div>
+                            <div style={stylePercent}>{complete}%</div>
                         </div>
-                        <Progress percent={complete} indicating style={{ marginBottom: '0' }} />
+                        <Progress percent={complete} indicating={indi} style={{ marginBottom: '0' }} />
                     </Grid.Column>
                     <Grid.Column computer={3} style={styleCenter}>
                         <Header as='h3'>0.0Mb/s</Header>
@@ -93,7 +94,7 @@ export default class DloadContainer extends Component {
                                 <div style={styleName}>{item.name}</div>
                                 <div style={stylePercent}>{(item.downloaded / item.size * 100).toFixed(0)}%</div>
                             </div>
-                            <Progress percent={item.downloaded / item.size * 100} indicating style={{ marginBottom: '0' }} />
+                            <Progress percent={item.downloaded / item.size * 100} indicating={item.status=="Downloading"} style={{ marginBottom: '0' }} />
                         </Grid.Column>
                         <Grid.Column computer={3} style={styleCenter}>
                             <Header as='h3'>0.0Mb/s</Header>
