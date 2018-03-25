@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom';
 
 
-import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react'
+import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
 import DownloadList from './comp/download-list';
 import Home from './view/home';
 import Links from './view/links';

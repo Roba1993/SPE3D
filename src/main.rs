@@ -58,6 +58,7 @@ fn main() {
         .launch();
 }
 
+
 #[get("/")]
 fn index() -> ::std::io::Result<NamedFile> {
     NamedFile::open("www/index.html")
