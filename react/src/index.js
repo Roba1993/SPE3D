@@ -35,15 +35,12 @@ class App extends Component {
     render () {
         return <Router>
                 <Sidebar.Pushable as={Page}>
-                    <Sidebar as={Menu} animation='push' direction='top' visible={true} size='large'>
+                    <Sidebar as={Menu} animation='push' direction='top' visible={true} size='large' borderless>
                         <Menu.Item name='name'>
-                            <Link to="/" style={styleMenu}><Header as='h2' style={styleMenu}>SPE3D</Header></Link>
-                        </Menu.Item>
-                        <Menu.Item name='home'>
-                            <Link to="/" style={styleMenu}><Icon name='home' /> Home</Link>
+                            <Link to="/"><Header as='h2' style={styleMenu}>SPE3D</Header></Link>
                         </Menu.Item>
                         <Menu.Item name='links'>
-                            <Link to="/links" style={styleMenu}><Icon name='write' />Links</Link>
+                            <Link to="/links" style={styleButtons}><Icon name='plus' size='large'/></Link>
                         </Menu.Item>
                     </Sidebar>
                     <Sidebar.Pusher>
@@ -66,11 +63,18 @@ class Page extends Component {
 }
 
 const styleMenu = {
-    color: '#00ca34'
+    color: '#00ca34',
+    marginLeft: '10px'
+}
+
+const styleButtons = {
+    color: '#00ca34',
+    marginLeft: '100px'
 }
 
 const styleSegment = {
-    marginTop: '25px'
+    color: '#00ca34',
+    marginTop: '20px'
 }
 
 
