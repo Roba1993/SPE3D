@@ -54,7 +54,7 @@ fn main() {
     rocket::custom(config.into(), true)
         .manage(dm)
         .attach(rocket_cors::Cors::default())
-        .mount("/", routes![api_test, api_start_download, api_downloads, api_add_links, api_add_dlc, index, files])
+        .mount("/", routes![api_test, api_start_download, api_downloads, api_add_links, api_add_dlc, api_remove_link, index, files])
         .launch();
 }
 
@@ -96,6 +96,13 @@ fn api_add_links(dm: State<DownloadManager>, json: Json<serde_json::Value>) -> R
         // get the links
         json["links"].as_array().ok_or("Package links are not provided")?.iter().map(|u| u.as_str()).filter(|u| u.is_some()).map(|u| u.unwrap().to_string()).collect()
     )
+}
+
+#[post("/api/delete-link/<id>")]
+#[allow(needless_pass_by_value)]
+fn api_remove_link(dm: State<DownloadManager>, id: usize) -> Result<()> {
+    // remove the container or link
+    dm.remove(id)
 }
 
 #[post("/api/add-dlc", data = "<data>")]

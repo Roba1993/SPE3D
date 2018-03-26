@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { withAlert } from 'react-alert';
 import { Input, Icon, Button, Header } from 'semantic-ui-react';
 
 export default class AddLinks extends Component {

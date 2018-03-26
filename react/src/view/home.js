@@ -4,7 +4,7 @@ import DownloadList from './../comp/download-list';
 export default class Home extends Component {
     render() {
         return <div>
-            <DownloadList data={this.props.dloads} />
+            <DownloadList data={this.props.dloads} selected={this.props.selected} changeSelection={(d) => {this.props.changeSelection(d)}}/>
         </div>
     }
 }

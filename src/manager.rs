@@ -51,6 +51,10 @@ impl DownloadManager {
         self.d_list.add_package(pck)
     }
 
+    pub fn remove(&self, id: usize) -> Result<()> {
+        self.d_list.remove(id)
+    }
+
     /// Get a copy of the download list
     pub fn get_downloads(&self) -> Result<Vec<DownloadPackage>> {
         self.d_list.get_downloads()
@@ -196,6 +200,17 @@ impl DownloadList {
     /// Add a new package to the download list
     pub fn add_package(&self, package: DownloadPackage) -> Result<()> {
         self.downloads.write()?.push(package);
+        self.ws_send_change()?;
+        self.save()
+    }
+
+    /// Add a new package to the download list
+    pub fn remove(&self, id: usize) -> Result<()> {
+        // delete a children
+        self.downloads.write()?.iter_mut().for_each(|p| p.files.retain(|i| i.id() != id));
+        // delete a container also all empty containers
+        self.downloads.write()?.retain(|i| i.id() != id && !i.files.is_empty() );
+
         self.ws_send_change()?;
         self.save()
     }

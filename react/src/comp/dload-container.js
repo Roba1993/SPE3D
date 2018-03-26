@@ -43,6 +43,35 @@ export default class DloadContainer extends Component {
         this.setState(prevState => ({
             open: !prevState.open
         }));
+        
+        if (!this.state.open) {
+            this.set_selection(e, this.props.container.id);
+        }
+        else {
+            this.set_selection(e, false);
+        }
+    }
+
+    set_selection(e, id) {
+        e.preventDefault();
+
+        if (id == this.props.selected) {
+            this.props.changeSelection(false);
+        }
+        else {
+            this.props.changeSelection(id);
+        }
+    }
+
+    get_selected(id) {
+        if (id != this.props.selected) {
+            return;
+        }
+
+        return {
+            color: 'olive',
+            inverted: true
+        }
     }
 
     render() {
@@ -51,6 +80,8 @@ export default class DloadContainer extends Component {
         if (c === undefined) {
             return <div></div>;
         }
+
+        console.log(this.props.selected);
 
         var size_raw = c.files.reduce((pre, curr) => pre + curr.size, 0);
         var size = this.formatBytes(size_raw, 2);
@@ -62,13 +93,13 @@ export default class DloadContainer extends Component {
         var warning = c.files.some(f => f.status == "WrongHash");
         var speed_raw = c.files.reduce((pre, curr) => pre + curr.speed, 0);
         var speed = this.formatBytes(speed_raw, 2);
-        var mins = (speed_raw!=0) ? this.formatTime((size_raw / speed_raw)) : (success) ? 'Done' : 'Not Started';
+        var mins = (speed_raw != 0) ? this.formatTime((size_raw / speed_raw)) : (success) ? 'Done' : 'Not Started';
 
         return <Segment.Group>
-            <Segment onClick={(e) => { this.change_open(e) }}>
+            <Segment {...this.get_selected(c.id)} onClick={(e) => { this.change_open(e) }}>
                 <Grid columns='equal'>
                     <Grid.Column computer={1} mobile={4} style={styleCenter}>
-                        <Button circular color='green' size='huge' style={styleButton} onClick={(e) => { this.start_download(e, c.id) }}
+                        <Button circular color='green' size='huge' style={styleButton} onClick={(e) => { this.start_download(e) }}
                             icon={(success) ? 'check' :
                                 (warning) ? 'warning sign' :
                                     (indi) ? 'spinner' : 'arrow down'}
@@ -98,10 +129,10 @@ export default class DloadContainer extends Component {
             </Segment>
             {this.state.open == true &&
                 c.files.map((item, index) => (
-                    <Segment key={index}>
+                    <Segment key={index} {...this.get_selected(item.id)} onClick={(e) => { this.set_selection(e, item.id) }}>
                         <Grid columns='equal' >
                             <Grid.Column computer={1} style={styleCenter}>
-                                <Header as='h3' onClick={(e) => { this.change_open(e) }}><Icon name="angle double right"/></Header>
+                                <Header as='h3' onClick={(e) => { this.change_open(e) }}><Icon name="angle double right" /></Header>
                             </Grid.Column>
                             <Grid.Column computer={1} mobile={4} style={styleCenter}>
                                 <Button circular color='green' size='huge' style={styleButton} onClick={(e) => { this.start_download(e, item.id) }}
@@ -126,7 +157,7 @@ export default class DloadContainer extends Component {
                                 <Header as='h3'>{this.formatBytes(item.size, 2)}</Header>
                             </Grid.Column>
                             <Grid.Column computer={2} style={styleCenter}>
-                                <Header as='h3'>{(item.speed!=0) ? this.formatTime((item.size / item.speed)) : (success) ? 'Done' : 'Not Started'}</Header>
+                                <Header as='h3'>{(item.speed != 0) ? this.formatTime((item.size / item.speed)) : (success) ? 'Done' : 'Not Started'}</Header>
                             </Grid.Column>
                             <Grid.Column computer={2} style={styleCenter}>
                                 <Header as='h3'>{item.status}</Header>

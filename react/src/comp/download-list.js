@@ -26,7 +26,7 @@ export default class DownloadList extends Component {
                 </Grid.Column>
             </Grid>
             {this.props.data.map((item, index) => (
-                <DloadContainer key={index} container={item} />
+                <DloadContainer key={index} container={item} selected={this.props.selected} changeSelection={(d) => {this.props.changeSelection(d)}}/>
             ))}
         </div>
     }
