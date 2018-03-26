@@ -57,6 +57,21 @@ class App extends Component {
             })
     }
 
+    startDownload(e) {
+        e.preventDefault();
+
+        if (!this.state.selected) {
+            return;
+        }
+
+        var id = this.state.selected;
+        fetch("http://" + window.location.hostname + ":8000/api/start-download/" + id,
+            {
+                method: "POST"
+            })
+            .then(function (res) { console.log(res) })
+    }
+
     render() {
         return <Router>
             <Sidebar.Pushable as={Page}>
@@ -67,6 +82,7 @@ class App extends Component {
                     <Menu.Item name='links' style={styleButtons}>
                         <Link to="/links" style={styleButton}><Icon name='plus' size='large' /></Link>
                         <Icon name='trash' size='large' color={this.state.selected?'green':'grey'} onClick={(e) => { this.deleteLink(e) }}/>
+                        <Icon name='arrow down' size='large' color={this.state.selected?'green':'grey'} onClick={(e) => { this.startDownload(e) }}/>
                     </Menu.Item>
                 </Sidebar>
                 <Sidebar.Pusher>
