@@ -64,11 +64,15 @@ impl Downloader {
             _ => Err(Error::from("Hoster not supported"))
         }?;
 
+        // set the download status to zero
+        self.d_list.set_downloaded(f_info.id(), 0)?;
+
         ::std::fs::create_dir_all(format!("./out/{}", pck.name))?;
         let hash = stream.write_to_file(format!("./out/{}/{}", pck.name, f_info.name), &f_info.id(), self.d_updater.get_sender()?)?;
         println!("HASH FROM DLOAD: {}", hash);
 
-        // set the downloaded attribute to the size, because all is downloaded
+        // set the downloaded attribute to the size, because all is downloaded and set speed to 0
+        self.d_list.add_downloaded(f_info.id(), 0)?;
         self.d_list.set_downloaded(f_info.id(), f_info.size)?;
 
         // check if the hash matched
@@ -123,6 +127,6 @@ impl DownloadUpdater {
 
     fn handle_update(&self, receiver: &Receiver<(usize, usize)>) -> Result<()> {
         let (id, size) = receiver.recv()?;
-        self.d_list.set_downloaded(id, size)
+        self.d_list.add_downloaded(id, size)
     }
 }

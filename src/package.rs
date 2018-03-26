@@ -56,6 +56,7 @@ pub struct DownloadFile {
     pub url: String,
     pub size: usize,
     pub downloaded: usize,
+    pub speed: usize,
     pub hash: FileHash,
     pub infos: HashMap<String, String>
 }
@@ -70,6 +71,7 @@ impl DownloadFile {
             url: "".to_string(),
             size: 0,
             downloaded: 0,
+            speed: 0,
             hash: FileHash::None,
             infos: HashMap::new(),
         }

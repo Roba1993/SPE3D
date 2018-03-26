@@ -170,10 +170,22 @@ impl DownloadList {
         self.save()
     }
 
+    pub fn add_downloaded(&self, id: usize, size: usize) -> Result<()> {
+        self.downloads.write()?.iter_mut().for_each(|pck| 
+            if let Some(i) = pck.files.iter_mut().find(|f| f.id() == id) { 
+                i.downloaded += size;
+                i.speed = size;
+            }
+        );
+
+        self.ws_send_change()?;
+        Ok(())
+    }
+
     pub fn set_downloaded(&self, id: usize, size: usize) -> Result<()> {
         self.downloads.write()?.iter_mut().for_each(|pck| 
             if let Some(i) = pck.files.iter_mut().find(|f| f.id() == id) { 
-                i.downloaded = size 
+                i.downloaded = size;
             }
         );
 
@@ -289,7 +301,15 @@ impl DownloadList {
         
         package::set_idcounter(id);
 
-        for p in d_list {
+        for mut p in d_list {
+            // reset speed
+            p.files.iter_mut().for_each(|f| {
+                f.speed = 0;
+                if f.status == FileStatus::Downloading {
+                    f.status = FileStatus::DownloadQueue;
+                };
+            });
+
             self.add_package(p)?;
         }
 

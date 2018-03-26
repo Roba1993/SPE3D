@@ -37,7 +37,7 @@ class App extends Component {
                 <Sidebar.Pushable as={Page}>
                     <Sidebar as={Menu} animation='push' direction='top' visible={true} size='large'>
                         <Menu.Item name='name'>
-                            <Header as='h2' style={styleMenu}>SPE3D</Header>
+                            <Link to="/" style={styleMenu}><Header as='h2' style={styleMenu}>SPE3D</Header></Link>
                         </Menu.Item>
                         <Menu.Item name='home'>
                             <Link to="/" style={styleMenu}><Icon name='home' /> Home</Link>

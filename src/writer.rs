@@ -14,7 +14,6 @@ pub trait FileWriter : Read {
     fn write_to_file<S: Into<String>>(&mut self, file: S, id: &usize, sender: Sender<(usize, usize)>) -> Result<String> {
         // define the buffer
         let mut buffer = [0u8; 4096];
-        let mut downloaded = 0;
         let mut start = Instant::now();
 
         // define the hasher
@@ -38,9 +37,8 @@ pub trait FileWriter : Read {
             file.write_all(&buffer[0..len])?;
 
             // update the status
-            downloaded += len;
             if start.elapsed() > Duration::from_secs(1) {
-                sender.send((*id, downloaded))?;
+                sender.send((*id, len))?;
                 start = Instant::now();
             }
         }
