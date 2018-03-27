@@ -3,6 +3,11 @@ name = "spe3d"
 version = "0.1.0"
 authors = ["roba"]
 
+[[bin]]
+name = "spe3d"
+doc = false
+path = "src/bin/main.rs"
+
 [dependencies]
 reqwest = "0.8.5"
 regex = "0.2.5"

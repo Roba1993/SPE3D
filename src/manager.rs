@@ -1,15 +1,14 @@
 use error::*;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Mutex};
 use package::{DownloadPackage, FileStatus};
 use std::thread;
 use downloader::Downloader;
-use ws;
-use serde_json;
-use serde::Serialize;
 use config::Config;
 use std::fs::File;
 use std::io::prelude::*;
 use package;
+use dlc_decrypter::DlcDecoder;
+use std::sync::mpsc::{Sender, Receiver, channel};
 
 /// Download Manager
 /// 
@@ -51,6 +50,14 @@ impl DownloadManager {
         self.d_list.add_package(pck)
     }
 
+    pub fn add_dlc(&self, data: &str) -> Result<()> {
+        // extract the dlc package
+        let dlc = DlcDecoder::new();
+        let pck = dlc.from_data(data.as_bytes())?;
+        self.add_package(pck)?;
+        Ok(())
+    }
+
     pub fn remove(&self, id: usize) -> Result<()> {
         self.d_list.remove(id)
     }
@@ -63,11 +70,6 @@ impl DownloadManager {
     /// Start the download of an package, by the id
     pub fn start_download(&self, id: usize) -> Result<()> {
         self.d_list.set_status(id, &FileStatus::DownloadQueue)
-    }
-
-    /// Set a websocket sender to broadcast the changed id's
-    pub fn set_ws_sender(&self, sender: ws::Sender) -> Result<()> {
-        self.d_list.set_ws_sender(sender)
     }
 
     // start the download manager
@@ -99,6 +101,10 @@ impl DownloadManager {
         })
     }
 
+    pub fn recv_update(&self) -> Result<Vec<DownloadPackage>> {
+        self.d_list.recv_update()
+    }
+
     /********************* Private Functions *****************/
     fn internal_loop(&self) -> Result<()> {
         loop {
@@ -121,19 +127,23 @@ impl DownloadManager {
 /// Download List
 /// 
 /// Shareable List off all the file informations of the downloads.
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct DownloadList {
     downloads: Arc<RwLock<Vec<DownloadPackage>>>,
-    ws_sender: Arc<RwLock<Option<ws::Sender>>>,
+    sender: Arc<Mutex<Sender<Vec<DownloadPackage>>>>,
+    receiver: Arc<Mutex<Receiver<Vec<DownloadPackage>>>>,
 }
 
 impl DownloadList {
     /// Create a new Download Manager
     pub fn new() -> DownloadList {
+        let (sender, receiver) = channel();
+
         // create the download list
         let d_list = DownloadList {
             downloads: Arc::new(RwLock::new(Vec::new())),
-            ws_sender: Arc::new(RwLock::new(None)),
+            sender: Arc::new(Mutex::new(sender)),
+            receiver: Arc::new(Mutex::new(receiver))
         };
 
         // load the previous state from file
@@ -277,29 +287,17 @@ impl DownloadList {
         )
     }
 
-    /// Add a websocket sender to broadcast the changed id's
-    pub fn set_ws_sender(&self, sender: ws::Sender) -> Result<()> {
-        let mut s = self.ws_sender.write()?;
-        *s = Some(sender);
-        Ok(())
-    }
-
     /// Send the actual status of the file info for the given id to all
     /// connected websocket clients
     pub fn ws_send_change(&self) -> Result<()> {
         let f_info = self.get_downloads()?;
-        self.ws_send(f_info)
+        self.sender.lock()?.send(f_info)?;
+        //self.ws_send(f_info)
+        Ok(())
     }
 
-    /// Send the mesage to all connected websocket clients
-    fn ws_send<T: Serialize>(&self, msg: T) -> Result<()> {
-        let msg = serde_json::to_string(&msg)?;
-
-        if let Some(s) = self.ws_sender.read()?.as_ref() {
-            s.broadcast(msg)?;
-        }
-
-        Ok(())
+    pub fn recv_update(&self) -> Result<Vec<DownloadPackage>> {
+        Ok(self.receiver.lock()?.recv()?)
     }
 
     fn save(&self) -> Result<()> {
@@ -330,4 +328,10 @@ impl DownloadList {
 
         Ok(())
     }
+}
+
+impl Default for DownloadList {
+    fn default() -> Self {
+        Self::new()
+    }  
 }

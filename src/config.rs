@@ -3,7 +3,6 @@ use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, RwLock};
 use toml;
-use std::convert::From;
 
 #[derive(Default, Debug, Clone)]
 pub struct Config {
@@ -27,18 +26,6 @@ impl Config {
             Ok(c) => c.clone(),
             Err(_) => ConfigData::default()
         }
-    }
-}
-
-impl From<Config> for ::rocket::Config {
-    fn from(data: Config) -> Self {
-        let data = data.get();
-        let builder = ::rocket::config::ConfigBuilder::new(::rocket::config::Environment::Staging);
-
-        builder
-            .address(data.webserver_ip)
-            .port(data.webserver_port as u16)
-            .expect("The rocket configuration is bad!")
     }
 }
 

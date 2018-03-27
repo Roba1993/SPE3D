@@ -14,8 +14,7 @@ error_chain!{
         ParseIntError(::std::num::ParseIntError);
         SerdeJson(::serde_json::error::Error);
         Toml(::toml::de::Error);
-        RecvError(::std::sync::mpsc::RecvError);    
-        WsError(::ws::Error);
+        RecvError(::std::sync::mpsc::RecvError);
     }
 
     links{
