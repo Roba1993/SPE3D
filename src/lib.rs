@@ -21,11 +21,11 @@ extern crate md5;
 
 pub mod error;
 pub mod config;
+pub mod loader;
 pub mod package;
 pub mod shareonline;
 pub mod list;
 pub mod writer;
-pub mod downloader;
 
 // reexports for easier use of the important structures
 pub use config::Config;
@@ -35,7 +35,7 @@ use error::*;
 use error_chain::ChainedError;
 use package::{DownloadPackage, FileStatus};
 use std::thread;
-use downloader::Downloader;
+use loader::Downloader;
 use dlc_decrypter::DlcDecoder;
 use list::DownloadList;
 

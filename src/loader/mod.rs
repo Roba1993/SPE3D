@@ -1,3 +1,6 @@
+//! The loader handles the different loader implementations and manage
+//! them for the `DownloadManager`.
+
 use error::*;
 use package::{DownloadFile, FileHoster, FileStatus};
 use shareonline::ShareOnline;
@@ -10,6 +13,7 @@ use std::sync::mpsc::Sender;
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex};
 
+/// The `Downloader` manages the actual downloads of files throgh different loader implementations.
 #[derive(Clone)]
 pub struct Downloader {
     config: Config,
@@ -87,6 +91,8 @@ impl Downloader {
     }
 }
 
+/// The download updater receives the actual download speed and volume for each file
+/// and reports this back to the `DownloadList`.
 #[derive(Clone)]
 pub struct DownloadUpdater {
     sender: Arc<Mutex<Sender<(usize, usize)>>>,
