@@ -1,7 +1,7 @@
 use std::thread;
 use Config;
 use ws;
-use spe3d::manager::DownloadManager;
+use spe3d::DownloadManager;
 use error::*;
 use error_chain::ChainedError;
 

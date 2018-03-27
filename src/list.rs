@@ -1,127 +1,9 @@
 use error::*;
 use std::sync::{Arc, RwLock, Mutex};
-use package::{DownloadPackage, FileStatus};
-use std::thread;
-use downloader::Downloader;
-use config::Config;
+use std::sync::mpsc::{Sender, Receiver, channel};
 use std::fs::File;
 use std::io::prelude::*;
-use package;
-use dlc_decrypter::DlcDecoder;
-use std::sync::mpsc::{Sender, Receiver, channel};
-
-/// Download Manager
-/// 
-/// Shareable struct to access all funtions for the downloads.
-#[derive(Clone)]
-pub struct DownloadManager {
-    config: Config,
-    d_list: DownloadList,
-    downloader: Downloader,
-}
-
-impl DownloadManager {
-    /// Create a new Download Manager
-    pub fn new(config: Config) -> Result<DownloadManager> {
-        let d_list = DownloadList::new();
-
-        Ok(DownloadManager {
-            config: config.clone(),
-            d_list: d_list.clone(),
-            downloader: Downloader::new(config, d_list),
-        })
-    }
-
-    /// Add a new download link to the manager.
-    pub fn add_links<S: Into<String>>(&self, name: S, urls: Vec<String>) -> Result<()> {
-        // download the file info
-        let f_infos = urls.into_iter().map(|u| self.downloader.check(u)).filter(|u| u.is_ok()).map(|u| u.unwrap()).collect();
-
-        // create a package for the file
-        let dp = DownloadPackage::new(name.into(), f_infos);
-
-        // add to links
-        self.d_list.add_package(dp)
-    }
-
-    pub fn add_package<P: Into<DownloadPackage>>(&self, pck: P) -> Result<()> {
-        let mut pck = pck.into();
-        pck.files = pck.files.into_iter().map(|f| self.downloader.check(f.url)).filter(|u| u.is_ok()).map(|u| u.unwrap()).collect();
-        self.d_list.add_package(pck)
-    }
-
-    pub fn add_dlc(&self, data: &str) -> Result<()> {
-        // extract the dlc package
-        let dlc = DlcDecoder::new();
-        let pck = dlc.from_data(data.as_bytes())?;
-        self.add_package(pck)?;
-        Ok(())
-    }
-
-    pub fn remove(&self, id: usize) -> Result<()> {
-        self.d_list.remove(id)
-    }
-
-    /// Get a copy of the download list
-    pub fn get_downloads(&self) -> Result<Vec<DownloadPackage>> {
-        self.d_list.get_downloads()
-    }
-
-    /// Start the download of an package, by the id
-    pub fn start_download(&self, id: usize) -> Result<()> {
-        self.d_list.set_status(id, &FileStatus::DownloadQueue)
-    }
-
-    // start the download manager
-    pub fn start(&self) -> thread::JoinHandle<()> {
-        // clone the download manager to use it in the thread
-        let dm = self.clone();
-
-        // spawn a new thread with an andless loop
-        thread::spawn(move || {
-            // counter for failures happend in a row
-            let mut failures = 0;
-
-            // run until end or failures reached maximum level
-            loop {
-                // run the logic
-                match dm.internal_loop() {
-                    Ok(_) => {
-                        break;
-                    },
-                    Err(_) => {
-                        // exit when we reached max number of errors
-                        failures += 1;
-                        if failures > 10 {
-                            break;
-                        }
-                    }
-                }
-            }
-        })
-    }
-
-    pub fn recv_update(&self) -> Result<Vec<DownloadPackage>> {
-        self.d_list.recv_update()
-    }
-
-    /********************* Private Functions *****************/
-    fn internal_loop(&self) -> Result<()> {
-        loop {
-            // get all download id's in queue to start
-            let qeue = self.d_list.files_status(FileStatus::DownloadQueue)?;
-            let dloads = self.d_list.files_status(FileStatus::Downloading)?;
-
-            // start a new download if its available
-            if dloads.len() < 3 && !qeue.is_empty() {
-                self.downloader.download(qeue.get(0).ok_or("Id is not available anymore")?.clone());
-            }
-
-            // wait to continue the loop
-            thread::sleep(::std::time::Duration::from_millis(50));
-        }
-    }
-}
+use package::{DownloadPackage, FileStatus};
 
 
 /// Download List
@@ -312,7 +194,7 @@ impl DownloadList {
         let file = File::open("./config/status.json")?;       
         let (id, d_list) : (usize, Vec<DownloadPackage>) = ::serde_json::from_reader(file)?;
         
-        package::set_idcounter(id);
+        ::package::set_idcounter(id);
 
         for mut p in d_list {
             // reset speed

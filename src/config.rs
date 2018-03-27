@@ -1,9 +1,29 @@
+//! To start the download manager correctly a configuration is needed.
+//!
+//! The following shows a default configuration which allows a quick start of the component.
+//! It tries to read the `config/config.toml` file and use default values if is not available.
+//! ```
+//! use spe3d::Config;
+//!
+//! let config = Config::new();
+//! ```
+//!
+//! The config can be used through the `get()` function. It always creates a clone for you.
+//! ```
+//! use spe3d::Config;
+//!
+//! let config = Config::new();
+//! let myconfig = config.get();
+//! assert_eq!("0.0.0.0", myconfig.webserver_ip);
+//! ```
+
 use error::*;
 use std::fs::File;
 use std::io::Read;
 use std::sync::{Arc, RwLock};
 use toml;
 
+/// The Config element which can be easily shared between different threads and lifetimes.
 #[derive(Default, Debug, Clone)]
 pub struct Config {
     data: Arc<RwLock<ConfigData>>

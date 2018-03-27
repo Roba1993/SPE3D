@@ -1,7 +1,7 @@
 use error::*;
 use package::{DownloadFile, FileHoster, FileStatus};
 use shareonline::ShareOnline;
-use manager::DownloadList;
+use list::DownloadList;
 use config::Config;
 use std::thread;
 use writer::FileWriter;

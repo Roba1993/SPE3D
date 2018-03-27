@@ -21,7 +21,7 @@ use rocket::response::NamedFile;
 use rocket::State;
 use rocket_contrib::Json;
 use std::path::Path;
-use spe3d::manager::DownloadManager;
+use spe3d::DownloadManager;
 use spe3d::package::DownloadPackage;
 use config::Config;
 use std::convert::From;

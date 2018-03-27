@@ -1,3 +1,25 @@
+//! Error structs based on `error_chain` for a simple conversion between the different
+//! errors of the crates.
+//!
+//! When you are leveraging this crate with a own `error_chain` implementation, add this
+//! trait over the following command.
+//!
+//! ```
+//! # #[macro_use] extern crate error_chain;
+//! # extern crate spe3d;
+//! # fn main() {
+//! error_chain!{
+//!     types {
+//!         Error, ErrorKind, ResultExt, Result;
+//!     }
+//!
+//!     links {
+//!         Spe3d(::spe3d::error::Error, ::spe3d::error::ErrorKind);
+//!     }
+//! }
+//! # }
+//! ```
+
 error_chain!{
 
     types {
