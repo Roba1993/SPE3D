@@ -173,7 +173,7 @@ type DownloadList = Vec<DownloadPackage>;
 /// Save shareable kist off all the download packages and file informations.
 /// This structure is mostly used internally by the `DownloadManager`.
 ///
-/// The DownloadList which is mostly used by the crate user, is a snapshot of this
+/// The `DownloadList` which is mostly used by the crate user, is a snapshot of this
 /// list at a certain time.
 #[derive(Clone)]
 pub struct SmartDownloadList {
@@ -228,7 +228,7 @@ impl SmartDownloadList {
             };
         }
 
-        self.ws_send_change()?;
+        self.publish_update()?;
         self.save()
     }
 
@@ -240,7 +240,7 @@ impl SmartDownloadList {
             }
         );
 
-        self.ws_send_change()?;
+        self.publish_update()?;
         Ok(())
     }
 
@@ -251,14 +251,14 @@ impl SmartDownloadList {
             }
         );
 
-        self.ws_send_change()?;
+        self.publish_update()?;
         Ok(())
     }
 
     /// Add a new package to the download list
     pub fn add_package(&self, package: DownloadPackage) -> Result<()> {
         self.downloads.write()?.push(package);
-        self.ws_send_change()?;
+        self.publish_update()?;
         self.save()
     }
 
@@ -269,7 +269,7 @@ impl SmartDownloadList {
         // delete a container also all empty containers
         self.downloads.write()?.retain(|i| i.id() != id && !i.files.is_empty() );
 
-        self.ws_send_change()?;
+        self.publish_update()?;
         self.save()
     }
 
@@ -335,15 +335,18 @@ impl SmartDownloadList {
         )
     }
 
-    /// Send the actual status of the file info for the given id to all
-    /// connected websocket clients
-    pub fn ws_send_change(&self) -> Result<()> {
-        let f_info = self.get_downloads()?;
-        self.sender.lock()?.send(f_info)?;
-        //self.ws_send(f_info)
+    /// Sends the actual status of the `SmartDownloaList` as a `DownloadList`
+    /// into the update channel.
+    ///
+    /// This update can be automatically received by the function `recv_update()`
+    pub fn publish_update(&self) -> Result<()> {
+        // get the download list and send it into the channel
+        self.sender.lock()?.send(self.get_downloads()?)?;
         Ok(())
     }
 
+    /// This is a blocking function, which returns a new `DownloadList` on
+    /// every change happening to the `SmartDownloadList`
     pub fn recv_update(&self) -> Result<DownloadList> {
         Ok(self.receiver.lock()?.recv()?)
     }
