@@ -4,9 +4,9 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { HashRouter as Router, Route, Link } from 'react-router-dom';
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
-import DownloadList from './comp/download-list';
 import Home from './view/home';
 import Links from './view/links';
+import Logo from './comp/logo';
 
 class App extends Component {
     state = {
@@ -76,8 +76,8 @@ class App extends Component {
         return <Router>
             <Sidebar.Pushable as={Page}>
                 <Sidebar as={Menu} animation='push' direction='top' visible={true} size='large' borderless>
-                    <Menu.Item name='name'>
-                        <Link to="/"><Header as='h2' style={styleMenu}>SPE3D</Header></Link>
+                <Menu.Item name='name'>
+                        <Link to="/" style={styleMenu}><Logo height='25px' width='100%'/></Link>
                     </Menu.Item>
                     <Menu.Item name='links' style={styleButtons}>
                         <Link to="/links" style={styleButton}><Icon name='plus' size='large' /></Link>

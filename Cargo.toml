@@ -12,7 +12,7 @@ path = "src/bin/main.rs"
 reqwest = "0.8.5"
 regex = "0.2.5"
 error-chain = "0.11.0"
-dlc-decrypter = { git = "https://github.com/Roba1993/dlc-decoder" }
+dlc-decrypter = "0.2.0"
 clippy = "0.0.189"
 
 # md5 hasher
