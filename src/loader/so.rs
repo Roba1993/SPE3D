@@ -1,7 +1,12 @@
+//! Share-Online downloader. Responsible to download files from Share-Online and
+//! checking the status of a download link.
+//!
+//! Right now only Premium Accounts are supported.
+
 use error::*;
 use reqwest;
 use regex::Regex;
-use package::{DownloadFile, FileHash, FileStatus, FileHoster};
+use models::{DownloadFile, FileHash, FileStatus, FileHoster};
 use std::collections::HashMap;
 use config::Config;
 

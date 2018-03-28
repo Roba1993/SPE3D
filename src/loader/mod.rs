@@ -1,29 +1,34 @@
 //! The loader handles the different loader implementations and manage
 //! them for the `DownloadManager`.
 
+pub mod so;
+
 use error::*;
-use package::{DownloadFile, FileHoster, FileStatus};
-use shareonline::ShareOnline;
-use list::DownloadList;
+use models::{DownloadFile, FileHoster, FileStatus, SmartDownloadList};
+use self::so::ShareOnline;
 use config::Config;
 use std::thread;
-use writer::FileWriter;
-use std::sync::mpsc::channel;
-use std::sync::mpsc::Sender;
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{Sender, Receiver, channel};
 use std::sync::{Arc, Mutex};
+use std::io::Read;
+use md5::{Md5, Digest};
+use std::fs::File;
+use std::io::Write;
+use std::time::{Duration, Instant};
+
+
 
 /// The `Downloader` manages the actual downloads of files throgh different loader implementations.
 #[derive(Clone)]
 pub struct Downloader {
     config: Config,
-    d_list: DownloadList,
+    d_list: SmartDownloadList,
     so_loader: ShareOnline,
     d_updater: DownloadUpdater,
 }
 
 impl Downloader {
-    pub fn new(config: Config, d_list: DownloadList) -> Downloader {
+    pub fn new(config: Config, d_list: SmartDownloadList) -> Downloader {
          Downloader {
             config: config.clone(),
             d_list: d_list.clone(),
@@ -96,11 +101,11 @@ impl Downloader {
 #[derive(Clone)]
 pub struct DownloadUpdater {
     sender: Arc<Mutex<Sender<(usize, usize)>>>,
-    d_list: DownloadList,
+    d_list: SmartDownloadList,
 }
 
 impl DownloadUpdater {
-    pub fn new(d_list: DownloadList) -> DownloadUpdater {
+    pub fn new(d_list: SmartDownloadList) -> DownloadUpdater {
         let (sender, receiver) = channel();
 
         let updater = DownloadUpdater {
@@ -136,3 +141,51 @@ impl DownloadUpdater {
         self.d_list.add_downloaded(id, size)
     }
 }
+
+
+
+
+/// Trait to write a stream of data to a file.
+pub trait FileWriter : Read {
+    /// Function to write a stream of data, to a file
+    /// based on the std::io::Read trait. This functions
+    /// returns as result the hash of the written file.
+    fn write_to_file<S: Into<String>>(&mut self, file: S, id: &usize, sender: Sender<(usize, usize)>) -> Result<String> {
+        // define the buffer
+        let mut buffer = [0u8; 4096];
+        let mut start = Instant::now();
+
+        // define the hasher
+        let mut hasher = Md5::new();
+
+        // Create the output file
+        let mut file = File::create(file.into())?;
+
+        // print out the values
+        loop {
+            // read the data from the stream
+            let len = self.read(&mut buffer)?;
+
+            // break if no data is available anymore
+            if len == 0 {
+                break;
+            }
+
+            // sent the data to the file and hasher
+            hasher.input(&buffer[0..len]);
+            file.write_all(&buffer[0..len])?;
+
+            // update the status
+            if start.elapsed() > Duration::from_secs(1) {
+                sender.send((*id, len))?;
+                start = Instant::now();
+            }
+        }
+
+        // return the hash as a string
+        Ok(format!("{:x}", hasher.result()))
+    }
+}
+
+// implement the Download Reader for the reqwest response
+impl FileWriter for ::reqwest::Response{}

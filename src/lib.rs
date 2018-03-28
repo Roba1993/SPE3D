@@ -21,11 +21,8 @@ extern crate md5;
 
 pub mod error;
 pub mod config;
+pub mod models;
 pub mod loader;
-pub mod package;
-pub mod shareonline;
-pub mod list;
-pub mod writer;
 
 // reexports for easier use of the important structures
 pub use config::Config;
@@ -33,19 +30,17 @@ pub use config::Config;
 // Imports for the Download Manager
 use error::*;
 use error_chain::ChainedError;
-use package::{DownloadPackage, FileStatus};
+use models::{DownloadPackage, FileStatus, SmartDownloadList};
 use std::thread;
 use loader::Downloader;
 use dlc_decrypter::DlcDecoder;
-use list::DownloadList;
-
 
 /// Main entry point for the API. This structure allows to add potential downloads
 /// to a shared list and gives the ability to start this downloads.
 #[derive(Clone)]
 pub struct DownloadManager {
     config: Config,
-    d_list: DownloadList,
+    d_list: SmartDownloadList,
     downloader: Downloader,
 }
 
