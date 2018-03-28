@@ -279,7 +279,7 @@ impl SmartDownloadList {
     }
 
     /// Gives a list of the files with the status back
-    pub fn files_status(&self, status: FileStatus) -> Result<DownloadList> {
+    pub fn files_status(&self, status: FileStatus) -> Result<Vec<usize>> {
         // get all download id's in queue to start
         let ids = self.downloads.read()?.iter().map(|pck|
                 pck.files.iter()

@@ -47,7 +47,7 @@ pub struct DownloadManager {
 impl DownloadManager {
     /// Create a new Download Manager based on a configuration
     pub fn new(config: Config) -> Result<DownloadManager> {
-        let d_list = DownloadList::new();
+        let d_list = SmartDownloadList::new();
 
         Ok(DownloadManager {
             config: config.clone(),
