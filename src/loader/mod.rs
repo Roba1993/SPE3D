@@ -4,7 +4,7 @@
 pub mod so;
 
 use error::*;
-use models::{DownloadFile, FileHoster, FileStatus, SmartDownloadList};
+use models::{DownloadFile, FileStatus, SmartDownloadList};
 use self::so::ShareOnline;
 use config::Config;
 use std::thread;
@@ -18,22 +18,39 @@ use std::time::{Duration, Instant};
 
 
 
+pub trait Loader {
+    /// Check a url if it can be loaded with the laoder. Retuns an error if not
+    fn check(&self, url: &str) -> Result<Option<DownloadFile>>;
+
+    /// Download a file, with this laoder
+    fn download(&self, file: &DownloadFile) -> Result<::reqwest::Response>;
+
+    /// Prove that the downloaded file is correct
+    fn prove(&self, file: &DownloadFile, path: &str) -> Result<bool>;
+}
+
 /// The `Downloader` manages the actual downloads of files throgh different loader implementations.
 #[derive(Clone)]
 pub struct Downloader {
-    config: Config,
-    d_list: SmartDownloadList,
-    so_loader: ShareOnline,
-    d_updater: DownloadUpdater,
+    config: Arc<Config>,
+    d_list: Arc<SmartDownloadList>,
+    so_loader: Arc<ShareOnline>,
+    d_updater: Arc<DownloadUpdater>,
+    loader: Arc<Vec<Box<Loader+Sync+Send>>>
 }
 
 impl Downloader {
     pub fn new(config: Config, d_list: SmartDownloadList) -> Downloader {
+        let loader = Arc::new(vec!(
+            Box::new(ShareOnline::new(config.clone())) as Box<Loader+Sync+Send>,
+        ));
+
          Downloader {
-            config: config.clone(),
-            d_list: d_list.clone(),
-            so_loader: ShareOnline::new(config),
-            d_updater: DownloadUpdater::new(d_list),
+            config: Arc::new(config.clone()),
+            d_list: Arc::new(d_list.clone()),
+            so_loader: Arc::new(ShareOnline::new(config)),
+            d_updater: Arc::new(DownloadUpdater::new(d_list)),
+            loader
         }
     }
 
@@ -49,11 +66,11 @@ impl Downloader {
     pub fn check<S: Into<String>>(&self, link: S) -> Result<DownloadFile> {
         let link = link.into();
 
-        // check Share-Online
-        let file_info = self.so_loader.check(link)?;
-        if file_info.is_some() { 
-            return file_info.ok_or_else(|| Error::from("File lost")) 
-        };
+        for l in self.loader.iter() {
+            if let Ok(Some(f)) = l.check(&link) {
+                return Ok(f);
+            }
+        }
 
         Err(Error::from("Can't identify file info"))
     }
@@ -66,26 +83,35 @@ impl Downloader {
         // get the file info
         let f_info = self.d_list.get_file(&id)?;
         let pck = self.d_list.get_package(&id)?;
+        let path = format!("./out/{}/{}", pck.name, f_info.name);
 
-        // get the download stream
-        let mut stream = match f_info.host {
-            FileHoster::ShareOnline => self.so_loader.clone().download_file(&f_info),
-            _ => Err(Error::from("Hoster not supported"))
-        }?;
+        let mut stream = None;
+
+        for d in self.loader.iter() {
+            if let Ok(f) = d.download(&f_info) {
+                stream = Some(f);
+                break;
+            }
+        }
+
+        let mut stream = match stream {
+            Some(s) => s,
+            None => {bail!("No stream available");}
+        };
 
         // set the download status to zero
         self.d_list.set_downloaded(f_info.id(), 0)?;
 
         ::std::fs::create_dir_all(format!("./out/{}", pck.name))?;
-        let hash = stream.write_to_file(format!("./out/{}/{}", pck.name, f_info.name), &f_info.id(), self.d_updater.get_sender()?)?;
+        let hash = stream.write_to_file(path.clone(), &f_info.id(), self.d_updater.get_sender()?)?;
         println!("HASH FROM DLOAD: {}", hash);
 
         // set the downloaded attribute to the size, because all is downloaded and set speed to 0
         self.d_list.add_downloaded(f_info.id(), 0)?;
         self.d_list.set_downloaded(f_info.id(), f_info.size)?;
 
-        // check if the hash matched
-        if hash == f_info.hash.md5().ok_or("No MD5 hash available")? {
+        // check if the download can be proven
+        if self.loader.iter().any(|l| l.prove(&f_info, &path).unwrap_or(false)) {
             self.d_list.set_status(id, &FileStatus::Downloaded)?;
         }
         else {
