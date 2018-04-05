@@ -17,7 +17,7 @@ use std::io::Write;
 use std::time::{Duration, Instant};
 
 
-
+/// This `Loader` defines which funtionalities are used to download a file from a source
 pub trait Loader {
     /// Check a url if it can be loaded with the laoder. Retuns an error if not
     fn check(&self, url: &str) -> Result<Option<DownloadFile>>;
@@ -29,31 +29,36 @@ pub trait Loader {
     fn prove(&self, file: &DownloadFile, path: &str) -> Result<bool>;
 }
 
+
+
+
+
+
 /// The `Downloader` manages the actual downloads of files throgh different loader implementations.
 #[derive(Clone)]
 pub struct Downloader {
     config: Arc<Config>,
     d_list: Arc<SmartDownloadList>,
-    so_loader: Arc<ShareOnline>,
     d_updater: Arc<DownloadUpdater>,
     loader: Arc<Vec<Box<Loader+Sync+Send>>>
 }
 
 impl Downloader {
+    /// Create a new Downloader
     pub fn new(config: Config, d_list: SmartDownloadList) -> Downloader {
         let loader = Arc::new(vec!(
             Box::new(ShareOnline::new(config.clone())) as Box<Loader+Sync+Send>,
         ));
 
          Downloader {
-            config: Arc::new(config.clone()),
+            config: Arc::new(config),
             d_list: Arc::new(d_list.clone()),
-            so_loader: Arc::new(ShareOnline::new(config)),
             d_updater: Arc::new(DownloadUpdater::new(d_list)),
             loader
         }
     }
 
+    /// Download a file
     pub fn download(&self, id: usize) {
         let this = self.clone();
 
@@ -63,10 +68,13 @@ impl Downloader {
         });
     }
 
+    /// Check the status of a file
     pub fn check<S: Into<String>>(&self, link: S) -> Result<DownloadFile> {
         let link = link.into();
 
+        // loop over all the loader
         for l in self.loader.iter() {
+            // return the first valid file check info
             if let Ok(Some(f)) = l.check(&link) {
                 return Ok(f);
             }
@@ -76,7 +84,7 @@ impl Downloader {
     }
 
     /*************************** Private Functions ************************/
-
+    /// The detail downloading process
     fn internal_download(&self, id: usize) -> Result<()> {
         // set the status to downloading
         self.d_list.set_status(id, &FileStatus::Downloading)?;
@@ -121,6 +129,11 @@ impl Downloader {
         Ok(())
     }
 }
+
+
+
+
+
 
 /// The download updater receives the actual download speed and volume for each file
 /// and reports this back to the `DownloadList`.

@@ -13,6 +13,7 @@ use loader::Loader;
 use md5::{Md5, Digest};
 use std::fs::File;
 
+/// Share-Online downloader struct which allows to download files from share-online with an premium account.
 #[derive(Debug, Clone)]
 pub struct ShareOnline {
     config: Config,
@@ -119,6 +120,7 @@ impl Loader for ShareOnline {
 
 
 impl ShareOnline {
+    /// Create a new Share-Online downlaoder
     pub fn new (config: Config) -> ShareOnline {
         ShareOnline {
             config,
@@ -127,6 +129,7 @@ impl ShareOnline {
         }
     }
 
+    /// Share-Online premium login
     fn login(&self) -> Result<(String, String)> {
         let usr = self.config.get().share_online.ok_or("No share-online logins defined")?.username;
         let pwd = self.config.get().share_online.ok_or("No share-online logins defined")?.password;
