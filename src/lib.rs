@@ -4,7 +4,6 @@
 //!
 
 
-#![feature(match_default_bindings)]
 #![feature(const_atomic_usize_new)]
 #![feature(plugin)]
 #![plugin(clippy)]

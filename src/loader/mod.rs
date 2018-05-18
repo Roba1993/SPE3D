@@ -144,6 +144,7 @@ pub struct DownloadUpdater {
 }
 
 impl DownloadUpdater {
+    /// Create a new download updater
     pub fn new(d_list: SmartDownloadList) -> DownloadUpdater {
         let (sender, receiver) = channel();
 
@@ -157,10 +158,13 @@ impl DownloadUpdater {
         updater
     }
 
+    /// Get a sender to send messages/updates to the downlaod updater.
+    /// The Sender needs the following data (id, data last second)
     pub fn get_sender(&self) -> Result<Sender<(usize, usize)>> {
         Ok(self.sender.lock()?.clone())
     }
 
+    /// Start the download updater (spawns a thread)
     fn run(&self, receiver: Receiver<(usize, usize)>) {
         let this = self.clone();
 
@@ -175,6 +179,7 @@ impl DownloadUpdater {
         });
     }
 
+    /// Internal function to handle the incomingmessages
     fn handle_update(&self, receiver: &Receiver<(usize, usize)>) -> Result<()> {
         let (id, size) = receiver.recv()?;
         self.d_list.add_downloaded(id, size)
