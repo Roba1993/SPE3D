@@ -1,6 +1,6 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
-#![plugin(clippy)]
+//#![plugin(clippy)]
 
 #[macro_use] extern crate error_chain;
 extern crate serde;

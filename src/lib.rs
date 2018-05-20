@@ -6,7 +6,7 @@
 
 #![feature(const_atomic_usize_new)]
 #![feature(plugin)]
-#![plugin(clippy)]
+//#![plugin(clippy)]
 
 #[macro_use] extern crate error_chain;
 #[macro_use]extern crate serde_derive;

@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
+import { observer } from "mobx-react";
 import { Input, Icon, Button, Header } from 'semantic-ui-react';
 
+@observer
 export default class AddLinks extends Component {
     state = { links: [] };
 
@@ -36,8 +38,13 @@ export default class AddLinks extends Component {
                 },
                 body: JSON.stringify(this.state)
             })
-            .then(function (res) {
-                console.log(res);
+            .then(res => { 
+                if (res.status != 200) {
+                    this.props.global.notify.createErrorMsg("The links are not valid", "The server was not able to interpret the links");
+                }
+                else {
+                    this.props.global.notify.createOkMsg("The links are valid", "The server successfully added the links");
+                }
             })
     }
 

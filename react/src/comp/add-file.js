@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
+import { observer } from "mobx-react";
 import { Input, Icon, Button, Header } from 'semantic-ui-react'
 import Dropzone from 'react-dropzone'
 
+@observer
 export default class AddFile extends Component {
     constructor() {
         super()
@@ -23,10 +25,17 @@ export default class AddFile extends Component {
                         },
                         body: fileAsBinaryString
                     })
-                    .then(function (res) { console.log(res) })
+                    .then(res => { 
+                        if (res.status != 200) {
+                            this.props.global.notify.createErrorMsg("The .dlc file is not valid", "The server was not able to interpret the .dlc file");
+                        }
+                        else {
+                            this.props.global.notify.createOkMsg("The .dlc file is valid", "The server successfully added the .dlc file");
+                        }
+                    })
             };
-            reader.onabort = () => console.log('file reading was aborted');
-            reader.onerror = () => console.log('file reading has failed');
+            reader.onabort = () => this.props.global.notify.createErrorMsg("The .dlc file reading interrupted", "The file reading was interrupted");
+            reader.onerror = () => this.props.global.notify.createErrorMsg("The .dlc file reading failed", "The file reading failed");
 
             reader.readAsBinaryString(file);
         });

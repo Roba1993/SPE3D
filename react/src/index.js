@@ -2,12 +2,16 @@ import 'semantic-ui-css/semantic.min.css';
 
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import { observer } from "mobx-react";
 import { HashRouter as Router, Route, Link } from 'react-router-dom';
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
 import Home from './view/home';
 import Links from './view/links';
 import Logo from './comp/logo';
+import Notify from './comp/Notify';
+import global from "./stores/GlobalStore";
 
+@observer
 class App extends Component {
     state = {
         dloads: [],
@@ -20,9 +24,18 @@ class App extends Component {
     }
 
     loadLinks() {
-        fetch(`http://` + window.location.hostname + `:8000/api/downloads`).then(r => r.json())
-            //.then(links => console.log(links))
-            .then(dloads => this.setState({ dloads: dloads }));
+        fetch(`http://` + window.location.hostname + `:8000/api/downloads`)
+            .then(res => {
+                if (res.status != 200) {
+                    this.props.global.notify.createErrorMsg("Download list not avialable", "The server was not able to provide the download list");
+                }
+
+                return res.json()
+            })
+            .then(dloads => this.setState({ dloads: dloads }))
+            .catch(error => {
+                this.props.global.notify.createErrorMsg("Connection to server failed", "Can't get the download list from server");
+            });
     }
 
     ws() {
@@ -43,7 +56,7 @@ class App extends Component {
         }
 
         var id = this.state.selected;
-        fetch("http://" + window.location.hostname + ":8000/api/delete-link/"+id,
+        fetch("http://" + window.location.hostname + ":8000/api/delete-link/" + id,
             {
                 method: "POST",
                 headers: {
@@ -52,8 +65,10 @@ class App extends Component {
                 },
                 //body: JSON.stringify(this.state)
             })
-            .then(function (res) {
-                console.log(res);
+            .then(res => {
+                if (res.status != 200) {
+                    this.props.global.notify.createErrorMsg("Deletion failed", "The server was not able to remove the link");
+                }
             })
     }
 
@@ -69,28 +84,33 @@ class App extends Component {
             {
                 method: "POST"
             })
-            .then(function (res) { console.log(res) })
+            .then(res => { 
+                if (res.status != 200) {
+                    this.props.global.notify.createErrorMsg("Download not started", "The server was not able to start the download");
+                }
+            })
     }
 
     render() {
         return <Router>
             <Sidebar.Pushable as={Page}>
                 <Sidebar as={Menu} animation='push' direction='top' visible={true} size='large' borderless>
-                <Menu.Item name='name'>
-                        <Link to="/" style={styleMenu}><Logo height='25px' width='100%'/></Link>
+                    <Menu.Item name='name'>
+                        <Link to="/" style={styleMenu}><Logo height='25px' width='100%' /></Link>
                     </Menu.Item>
                     <Menu.Item name='links' style={styleButtons}>
                         <Link to="/links" style={styleButton}><Icon name='plus' size='large' /></Link>
-                        <Icon name='trash' size='large' color={this.state.selected?'green':'grey'} onClick={(e) => { this.deleteLink(e) }}/>
-                        <Icon name='arrow down' size='large' color={this.state.selected?'green':'grey'} onClick={(e) => { this.startDownload(e) }}/>
+                        <Icon name='trash' size='large' color={this.state.selected ? 'green' : 'grey'} onClick={(e) => { this.deleteLink(e) }} />
+                        <Icon name='arrow down' size='large' color={this.state.selected ? 'green' : 'grey'} onClick={(e) => { this.startDownload(e) }} />
                     </Menu.Item>
                 </Sidebar>
                 <Sidebar.Pusher>
                     <Segment basic style={styleSegment}>
-                        <Route exact path="/" render={() => <Home dloads={this.state.dloads} selected={this.state.selected} changeSelection={(d) => { this.setState({ selected: d }) }} />} />
-                        <Route path="/links" render={() => <Links />} />
+                        <Route exact path="/" render={() => <Home global={global} dloads={this.state.dloads} selected={this.state.selected} changeSelection={(d) => { this.setState({ selected: d }) }} />} />
+                        <Route path="/links" render={() => <Links global={global} />} />
                     </Segment>
                 </Sidebar.Pusher>
+                <Notify global={global} />
             </Sidebar.Pushable>
         </Router>
     }
@@ -124,4 +144,4 @@ const styleButton = {
 }
 
 
-ReactDOM.render(<App />, document.getElementById('app'))
+ReactDOM.render(<App global={global} />, document.getElementById('app'))
