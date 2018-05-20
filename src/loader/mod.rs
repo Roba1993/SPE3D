@@ -204,11 +204,13 @@ pub trait FileWriter : Read {
 
         // Create the output file
         let mut file = File::create(file.into())?;
+        let mut speed = 0;
 
         // print out the values
         loop {
             // read the data from the stream
             let len = self.read(&mut buffer)?;
+            speed += len;
 
             // break if no data is available anymore
             if len == 0 {
@@ -221,7 +223,8 @@ pub trait FileWriter : Read {
 
             // update the status
             if start.elapsed() > Duration::from_secs(1) {
-                sender.send((*id, len))?;
+                sender.send((*id, speed))?;
+                speed = 0;
                 start = Instant::now();
             }
         }
