@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
+import { observer } from "mobx-react";
 import { Segment, Button, Icon, Progress, Grid, Header } from 'semantic-ui-react'
 
+@observer
 export default class DloadContainer extends Component {
     state = { open: false };
 
@@ -55,16 +57,16 @@ export default class DloadContainer extends Component {
     set_selection(e, id) {
         e.preventDefault();
 
-        if (id == this.props.selected) {
-            this.props.changeSelection(false);
+        if (id == this.props.global.ui.selected) {
+            this.props.global.ui.setSelected(false);
         }
         else {
-            this.props.changeSelection(id);
+            this.props.global.ui.setSelected(id);
         }
     }
 
     get_selected(id) {
-        if (id != this.props.selected) {
+        if (id != this.props.global.ui.selected) {
             return;
         }
 
@@ -81,7 +83,7 @@ export default class DloadContainer extends Component {
             return <div></div>;
         }
 
-        console.log(this.props.selected);
+        console.log(this.props.global.ui.selected);
 
         var size_raw = c.files.reduce((pre, curr) => pre + curr.size, 0);
         var size = this.formatBytes(size_raw, 2);

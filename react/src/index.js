@@ -15,7 +15,6 @@ import global from "./stores/GlobalStore";
 class App extends Component {
     state = {
         dloads: [],
-        selected: false,
     };
 
     componentDidMount() {
@@ -51,11 +50,11 @@ class App extends Component {
     deleteLink(e) {
         e.preventDefault();
 
-        if (!this.state.selected) {
+        if (!this.props.global.ui.selected) {
             return;
         }
 
-        var id = this.state.selected;
+        var id = this.props.global.ui.selected;
         fetch("http://" + window.location.hostname + ":8000/api/delete-link/" + id,
             {
                 method: "POST",
@@ -75,11 +74,11 @@ class App extends Component {
     startDownload(e) {
         e.preventDefault();
 
-        if (!this.state.selected) {
+        if (!this.props.global.ui.selected) {
             return;
         }
 
-        var id = this.state.selected;
+        var id = this.props.global.ui.selected;
         fetch("http://" + window.location.hostname + ":8000/api/start-download/" + id,
             {
                 method: "POST"
@@ -100,13 +99,13 @@ class App extends Component {
                     </Menu.Item>
                     <Menu.Item name='links' style={styleButtons}>
                         <Link to="/links" style={styleButton}><Icon name='plus' size='large' /></Link>
-                        <Icon name='trash' size='large' color={this.state.selected ? 'green' : 'grey'} onClick={(e) => { this.deleteLink(e) }} />
-                        <Icon name='arrow down' size='large' color={this.state.selected ? 'green' : 'grey'} onClick={(e) => { this.startDownload(e) }} />
+                        <Icon name='trash' size='large' color={this.props.global.ui.selected ? 'green' : 'grey'} onClick={(e) => { this.deleteLink(e) }} />
+                        <Icon name='arrow down' size='large' color={this.props.global.ui.selected ? 'green' : 'grey'} onClick={(e) => { this.startDownload(e) }} />
                     </Menu.Item>
                 </Sidebar>
                 <Sidebar.Pusher>
                     <Segment basic style={styleSegment}>
-                        <Route exact path="/" render={() => <Home global={global} dloads={this.state.dloads} selected={this.state.selected} changeSelection={(d) => { this.setState({ selected: d }) }} />} />
+                        <Route exact path="/" render={() => <Home global={global} dloads={this.state.dloads} />} />
                         <Route path="/links" render={() => <Links global={global} />} />
                     </Segment>
                 </Sidebar.Pusher>
