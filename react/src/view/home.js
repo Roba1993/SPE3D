@@ -6,7 +6,7 @@ import DownloadList from './../comp/download-list';
 export default class Home extends Component {
     render() {
         return <div>
-            <DownloadList global={this.props.global} data={this.props.dloads} />
+            <DownloadList global={this.props.global} />
         </div>
     }
 }

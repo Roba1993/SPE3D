@@ -1,3 +1,5 @@
+import global from "./stores/GlobalStore";
+
 import 'semantic-ui-css/semantic.min.css';
 
 import React, { Component } from 'react';
@@ -9,85 +11,19 @@ import Home from './view/home';
 import Links from './view/links';
 import Logo from './comp/logo';
 import Notify from './comp/Notify';
-import global from "./stores/GlobalStore";
+
 
 @observer
 class App extends Component {
-    state = {
-        dloads: [],
-    };
-
-    componentDidMount() {
-        this.loadLinks();
-        this.ws();
-    }
-
-    loadLinks() {
-        fetch(`http://` + window.location.hostname + `:8000/api/downloads`)
-            .then(res => {
-                if (res.status != 200) {
-                    this.props.global.notify.createErrorMsg("Download list not avialable", "The server was not able to provide the download list");
-                }
-
-                return res.json()
-            })
-            .then(dloads => this.setState({ dloads: dloads }))
-            .catch(error => {
-                this.props.global.notify.createErrorMsg("Connection to server failed", "Can't get the download list from server");
-            });
-    }
-
-    ws() {
-        var websocket = new WebSocket('ws://' + window.location.hostname + ':8001');
-        var that = this;
-        websocket.onmessage = function (evt) {
-            var obj = JSON.parse(evt.data);
-            //console.log(obj);
-            that.setState({ dloads: obj });
-        };
-    }
 
     deleteLink(e) {
         e.preventDefault();
-
-        if (!this.props.global.ui.selected) {
-            return;
-        }
-
-        var id = this.props.global.ui.selected;
-        fetch("http://" + window.location.hostname + ":8000/api/delete-link/" + id,
-            {
-                method: "POST",
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/json'
-                },
-                //body: JSON.stringify(this.state)
-            })
-            .then(res => {
-                if (res.status != 200) {
-                    this.props.global.notify.createErrorMsg("Deletion failed", "The server was not able to remove the link");
-                }
-            })
+        global.dload.removeDload(global.ui.selected);
     }
 
     startDownload(e) {
         e.preventDefault();
-
-        if (!this.props.global.ui.selected) {
-            return;
-        }
-
-        var id = this.props.global.ui.selected;
-        fetch("http://" + window.location.hostname + ":8000/api/start-download/" + id,
-            {
-                method: "POST"
-            })
-            .then(res => { 
-                if (res.status != 200) {
-                    this.props.global.notify.createErrorMsg("Download not started", "The server was not able to start the download");
-                }
-            })
+        global.dload.startDload(global.ui.selected);
     }
 
     render() {
@@ -105,7 +41,7 @@ class App extends Component {
                 </Sidebar>
                 <Sidebar.Pusher>
                     <Segment basic style={styleSegment}>
-                        <Route exact path="/" render={() => <Home global={global} dloads={this.state.dloads} />} />
+                        <Route exact path="/" render={() => <Home global={global} />} />
                         <Route path="/links" render={() => <Links global={global} />} />
                     </Segment>
                 </Sidebar.Pusher>

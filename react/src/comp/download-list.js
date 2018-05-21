@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
+import { observer } from "mobx-react";
 import { Table, Grid, Header } from 'semantic-ui-react';
 import DloadContainer from './dload-container';
 
+@observer
 export default class DownloadList extends Component {
     render() {
         return <div>
@@ -25,8 +27,8 @@ export default class DownloadList extends Component {
                     <Header as='h3' style={styleText}>Downloaded</Header>
                 </Grid.Column>
             </Grid>
-            {this.props.data.map((item, index) => (
-                <DloadContainer key={index} container={item} global={this.props.global} />
+            {this.props.global.dload.dloads.map((item, index) => (
+                <DloadContainer key={item.id} container={item} global={this.props.global} />
             ))}
         </div>
     }
