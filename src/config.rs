@@ -55,7 +55,7 @@ pub struct ConfigData {
     pub webserver_port: usize,
     pub websocket_port: usize,
 
-    pub share_online: Option<ConfigShareOnline>,
+    pub share_online: Vec<ConfigShareOnline>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -81,7 +81,7 @@ impl Default for ConfigData {
             webserver_port: 8000,
             websocket_port: 8001,
 
-            share_online: None
+            share_online: vec!()
         }
     }
 }

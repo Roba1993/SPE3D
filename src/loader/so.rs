@@ -36,8 +36,10 @@ impl Loader for ShareOnline {
             bail!("The given link wasn't a share-online download link");
         }
         
-        let usr = self.config.get().share_online.ok_or("No share-online logins defined")?.username;
-        let pwd = self.config.get().share_online.ok_or("No share-online logins defined")?.password;
+        let so_cfg = self.config.get().share_online.get(0).ok_or("No share-online logins defined")?.clone();
+
+        let usr = so_cfg.username;
+        let pwd = so_cfg.password;
 
         // make the request call
         let info_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=download&lid={}", usr, pwd, id);
@@ -131,8 +133,10 @@ impl ShareOnline {
 
     /// Share-Online premium login
     fn login(&self) -> Result<(String, String)> {
-        let usr = self.config.get().share_online.ok_or("No share-online logins defined")?.username;
-        let pwd = self.config.get().share_online.ok_or("No share-online logins defined")?.password;
+        let so_cfg = self.config.get().share_online.get(0).ok_or("No share-online logins defined")?.clone();
+
+        let usr = so_cfg.username;
+        let pwd = so_cfg.password;
 
         // download the user data
         let login_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=userDetails", usr, pwd);

@@ -1,8 +1,10 @@
 [package]
 name = "spe3d"
 version = "0.1.1"
-authors = ["roba"]
-
+authors = ["Robert Schütte <schuetterobert@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Roba1993/SPE3D"
+description = "Fast and Easy Download Manager for Servers"
 autobins = false
 
 [[bin]]
@@ -14,9 +16,7 @@ path = "src/bin/main.rs"
 reqwest = "0.8.5"
 regex = "1.0.0"
 error-chain = "0.11.0"
-#dlc-decrypter = "0.2.1"
-dlc-decrypter = {git = "https://github.com/Roba1993/dlc-decoder"}
-#clippy = "0.0.200"
+dlc-decrypter = "0.2.1"
 
 # md5 hasher
 md-5 = "0.7.0"
@@ -35,5 +35,4 @@ toml = "0.4.6"
 actix-web = "0.7.4"
 futures = "0.1.23"
 bytes = "0.4.9"
-
 failure = "0.1.2"
