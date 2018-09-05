@@ -9,6 +9,7 @@ import { HashRouter as Router, Route, Link } from 'react-router-dom';
 import { Sidebar, Segment, Button, Menu, Image, Icon, Header } from 'semantic-ui-react';
 import Home from './view/home';
 import Links from './view/links';
+import Config from './view/config';
 import Logo from './comp/logo';
 import Notify from './comp/Notify';
 
@@ -37,12 +38,14 @@ class App extends Component {
                         <Link to="/links" style={styleButton}><Icon name='plus' size='large' /></Link>
                         <Icon name='trash' size='large' color={this.props.global.ui.selected ? 'green' : 'grey'} onClick={(e) => { this.deleteLink(e) }} />
                         <Icon name='arrow down' size='large' color={this.props.global.ui.selected ? 'green' : 'grey'} onClick={(e) => { this.startDownload(e) }} />
+                        <Link to="/config" style={styleButton}><Icon name='settings' size='large' /></Link>
                     </Menu.Item>
                 </Sidebar>
                 <Sidebar.Pusher>
                     <Segment basic style={styleSegment}>
                         <Route exact path="/" render={() => <Home global={global} />} />
                         <Route path="/links" render={() => <Links global={global} />} />
+                        <Route path="/config" render={() => <Config global={global} />} />
                     </Segment>
                 </Sidebar.Pusher>
                 <Notify global={global} />

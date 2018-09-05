@@ -19,7 +19,7 @@ pub fn start_ws(config: &Config, dm: &DownloadManager) {
     // Get a sender for ALL connections to the websocket
     let broacaster = me.broadcaster();
 
-    let host = format!("{}:{}", config.get().webserver_ip, config.get().websocket_port);
+    let host = format!("{}:{}", config.get().server.ip, config.get().server.websocket_port);
     println!("{:?}", host);
 
     thread::spawn(move || {

@@ -28,6 +28,7 @@ use models::{DownloadPackage, FileStatus, SmartDownloadList};
 use std::thread;
 use loader::Downloader;
 use dlc_decrypter::DlcDecoder;
+use config::ConfigData;
 
 /// Main entry point for the API. This structure allows to add potential downloads
 /// to a shared list and gives the ability to start this downloads.
@@ -113,6 +114,11 @@ impl DownloadManager {
     /// Receive a new download list on each change
     pub fn recv_update(&self) -> Result<Vec<DownloadPackage>> {
         self.d_list.recv_update()
+    }
+
+    /// Get the actual configuration
+    pub fn get_config_data(&self) -> ConfigData {
+        self.config.get()
     }
 
     /********************* Private Functions *****************/

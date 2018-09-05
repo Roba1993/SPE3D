@@ -51,17 +51,8 @@ impl Config {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConfigData {
-    pub webserver_ip: String,
-    pub webserver_port: usize,
-    pub websocket_port: usize,
-
+    pub server: ConfigServer,
     pub share_online: Vec<ConfigShareOnline>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ConfigShareOnline {
-    pub username: String,
-    pub password: String,
 }
 
 impl ConfigData {
@@ -77,12 +68,36 @@ impl ConfigData {
 impl Default for ConfigData {
     fn default() -> ConfigData { 
         ConfigData {
-            webserver_ip: "0.0.0.0".to_string(),
-            webserver_port: 8000,
-            websocket_port: 8001,
-
+            server: ConfigServer::default(),
             share_online: vec!()
         }
     }
 }
+
+/// Server Configuration
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ConfigServer {
+    pub ip: String,
+    pub webserver_port: usize,
+    pub websocket_port: usize,
+}
+
+impl Default for ConfigServer {
+    fn default() -> ConfigServer { 
+        ConfigServer {
+            ip: "0.0.0.0".to_string(),
+            webserver_port: 8000,
+            websocket_port: 8001,
+        }
+    }
+}
+
+/// Share-Online account configuration
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ConfigShareOnline {
+    pub username: String,
+    pub password: String,
+}
+
+
 

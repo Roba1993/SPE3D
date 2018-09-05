@@ -22,6 +22,7 @@ use actix_web::{
 };
 use futures::future::Future;
 use bytes::Bytes;
+use actix_web::middleware::cors::Cors;
 
 fn main() {
     // load the config file
@@ -38,12 +39,14 @@ fn main() {
     server::new(move || {
         vec![
             App::with_state(dm.clone())
+                .middleware(Cors::build().send_wildcard().finish())
                 .resource("/api/test", |r| r.method(http::Method::GET).with(api_test))
                 .resource("/api/downloads", |r| r.method(http::Method::GET).with(api_downloads))
                 .resource("/api/start-download/{id}", |r| r.method(http::Method::POST).with(api_start_download))
                 .resource("/api/add-links", |r| r.method(http::Method::POST).with(api_add_links))
                 .resource("/api/delete-link/{id}", |r| r.method(http::Method::POST).with(api_remove_link))
                 .resource("/api/add-dlc", |r| r.method(http::Method::POST).with(api_add_dlc))
+                .resource("/api/config", |r| r.method(http::Method::GET).with(api_config))
                 .handler("/", StaticFiles::new("www").unwrap().index_file("index.html"))
                 .finish(),
         ]
@@ -102,4 +105,8 @@ fn api_add_dlc(req: HttpRequest<DownloadManager>) -> FutureResponse<HttpResponse
 
             Ok(HttpResponse::Ok().into())
        }).responder()
+}
+
+fn api_config(req: HttpRequest<DownloadManager>) -> Json<::spe3d::config::ConfigData> {
+    Json(req.state().get_config_data())
 }
