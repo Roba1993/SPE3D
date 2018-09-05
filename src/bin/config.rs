@@ -13,7 +13,7 @@ impl Config {
     }
 }
 
-impl From<Config> for ::rocket::Config {
+/*impl From<Config> for ::rocket::Config {
     fn from(data: Config) -> Self {
         let data = data.0.get();
         let builder = ::rocket::config::ConfigBuilder::new(::rocket::config::Environment::Staging);
@@ -23,7 +23,7 @@ impl From<Config> for ::rocket::Config {
             .port(data.webserver_port as u16)
             .expect("The rocket configuration is bad!")
     }
-}
+}*/
 
 impl From<Config> for ::spe3d::config::Config {
     fn from(data: Config) -> Self {

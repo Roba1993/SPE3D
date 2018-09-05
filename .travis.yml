@@ -3,7 +3,7 @@ services:
 - docker
 language: rust
 rust:
-- nightly
+- stable
 cache: cargo
 before_script:
 - wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash

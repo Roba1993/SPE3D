@@ -1,30 +1,27 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
-//#![plugin(clippy)]
-
 #[macro_use] extern crate error_chain;
 extern crate serde;
 extern crate serde_json;
 extern crate toml;
-extern crate rocket;
-extern crate rocket_contrib;
-extern crate rocket_cors;
-extern crate ws;
+extern crate actix_web;
 extern crate spe3d;
+extern crate ws;
+extern crate futures;
+extern crate bytes;
 
 pub mod error;
 pub mod config;
 pub mod websocket;
 
-use error::*;
-use rocket::response::NamedFile;
-use rocket::State;
-use rocket_contrib::Json;
-use std::path::Path;
-use spe3d::DownloadManager;
-use spe3d::models::DownloadPackage;
 use config::Config;
-use std::convert::From;
+use spe3d::models::DownloadPackage;
+use spe3d::DownloadManager;
+
+use actix_web::{
+    fs::StaticFiles, http, server, App, HttpRequest, HttpResponse,
+    Json, HttpMessage, FutureResponse, AsyncResponder, Result
+};
+use futures::future::Future;
+use bytes::Bytes;
 
 fn main() {
     // load the config file
@@ -36,69 +33,73 @@ fn main() {
 
     // start the websocket server and add it to the download manager
     websocket::start_ws(&config, &dm);
-    
-    // start the rocket webserver
-    rocket::custom(config.into(), true)
-        .manage(dm)
-        .attach(rocket_cors::Cors::default())
-        .mount("/", routes![api_test, api_start_download, api_downloads, api_add_links, api_add_dlc, api_remove_link, index, files])
-        .launch();
+
+    // start the actix webserver
+    server::new(move || {
+        vec![
+            App::with_state(dm.clone())
+                .resource("/api/test", |r| r.method(http::Method::GET).with(api_test))
+                .resource("/api/downloads", |r| r.method(http::Method::GET).with(api_downloads))
+                .resource("/api/start-download/{id}", |r| r.method(http::Method::POST).with(api_start_download))
+                .resource("/api/add-links", |r| r.method(http::Method::POST).with(api_add_links))
+                .resource("/api/delete-link/{id}", |r| r.method(http::Method::POST).with(api_remove_link))
+                .resource("/api/add-dlc", |r| r.method(http::Method::POST).with(api_add_dlc))
+                .handler("/", StaticFiles::new("www").unwrap().index_file("index.html"))
+                .finish(),
+        ]
+    }).bind("0.0.0.0:8000")
+    .unwrap()
+    .run();
 }
 
-
-#[get("/")]
-fn index() -> ::std::io::Result<NamedFile> {
-    NamedFile::open("www/index.html")
+fn api_test(_req: HttpRequest<DownloadManager>) -> Result<&'static str> {
+    Ok("Success")
 }
 
-
-#[get("/<file>")]
-fn files(file: String) -> Option<NamedFile> {
-    NamedFile::open(Path::new("www/").join(file)).ok()
+fn api_downloads(req: HttpRequest<DownloadManager>) -> Result<Json<Vec<DownloadPackage>>> {
+    Ok(Json(req.state().get_downloads().unwrap()))
 }
 
-#[get("/api/test")]
-fn api_test() -> String {
-    "Success".to_string()
+fn api_start_download(req: HttpRequest<DownloadManager>) -> Result<String> {
+    let id: usize = req.match_info().query("id")?;
+    req.state().start_download(id).unwrap();
+    Ok("".to_string())
 }
 
-#[get("/api/downloads")]
-#[allow(needless_pass_by_value)]
-fn api_downloads(dm: State<DownloadManager>) -> Result<Json<Vec<DownloadPackage>>> {
-    Ok(Json(dm.get_downloads()?))
-}
-
-#[post("/api/start-download/<id>")]
-#[allow(needless_pass_by_value)]
-fn api_start_download(dm: State<DownloadManager>, id: usize) -> Result<()> {
-    dm.start_download(id)?;
-    Ok(())
-}
-
-#[post("/api/add-links", data = "<json>")]
-#[allow(needless_pass_by_value)]
-fn api_add_links(dm: State<DownloadManager>, json: Json<serde_json::Value>) -> Result<()> {
+fn api_add_links(req: HttpRequest<DownloadManager>, json: Json<serde_json::Value>) -> Result<String> {
     // add the links as a package
-    dm.add_links(
+    req.state().add_links(
         // get the name
-        json["name"].as_str().ok_or("Package name is not provided")?,
+        json["name"]
+            .as_str()
+            .ok_or("Package name is not provided").unwrap(),
         // get the links
-        json["links"].as_array().ok_or("Package links are not provided")?.iter().map(|u| u.as_str()).filter(|u| u.is_some()).map(|u| u.unwrap().to_string()).collect()
-    )?;
-    Ok(())
+        json["links"]
+            .as_array()
+            .ok_or("Package links are not provided").unwrap()
+            .iter()
+            .map(|u| u.as_str())
+            .filter(|u| u.is_some())
+            .map(|u| u.unwrap().to_string())
+            .collect(),
+    ).unwrap();
+    Ok("".to_string())
 }
 
-#[post("/api/delete-link/<id>")]
-#[allow(needless_pass_by_value)]
-fn api_remove_link(dm: State<DownloadManager>, id: usize) -> Result<()> {
+fn api_remove_link(req: HttpRequest<DownloadManager>) -> Result<String> {
+    let id: usize = req.match_info().query("id")?;
     // remove the container or link
-    dm.remove(id)?;
-    Ok(())
+    req.state().remove(id).unwrap();
+    Ok("".to_string())
 }
 
-#[post("/api/add-dlc", data = "<data>")]
-#[allow(needless_pass_by_value)]
-fn api_add_dlc(dm: State<DownloadManager>, data: String) -> Result<()> {
-    dm.add_dlc(&data)?;
-    Ok(())
+fn api_add_dlc(req: HttpRequest<DownloadManager>) -> FutureResponse<HttpResponse> {
+    req.body()                     // <- get Body future
+       .limit(1_000_000)           // <- change max size of the body to a 1mb
+       .from_err()
+       .and_then(move |bytes: Bytes| {  // <- complete body
+            req.state().add_dlc(::std::str::from_utf8(&bytes).unwrap()).unwrap();
+
+            Ok(HttpResponse::Ok().into())
+       }).responder()
 }

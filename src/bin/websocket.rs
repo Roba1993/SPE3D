@@ -2,8 +2,10 @@ use std::thread;
 use Config;
 use ws;
 use spe3d::DownloadManager;
-use error::*;
-use error_chain::ChainedError;
+use ::Result;
+
+
+//type Result<T, E = ::failure::Error> = Result<T, E>;
 
 pub fn start_ws(config: &Config, dm: &DownloadManager) {
     // Create simple websocket that just prints out messages
@@ -28,16 +30,16 @@ pub fn start_ws(config: &Config, dm: &DownloadManager) {
     thread::spawn(move || {
         loop {
             if let Err(e) = handle_updates(&broacaster, &dm) {
-                println!("{}", e.display_chain().to_string());
+                println!("{}", e.to_string());
             }
         }
     });
 }
 
 fn handle_updates(sender: &ws::Sender, dm: &DownloadManager) -> Result<()> {
-    let msg = ::serde_json::to_string(&dm.recv_update()?)?;
+    let msg = ::serde_json::to_string(&dm.recv_update().unwrap())?;
 
     //me.listen(host).unwrap();
-    sender.send(msg)?;
+    sender.send(msg).unwrap();
     Ok(())
 }

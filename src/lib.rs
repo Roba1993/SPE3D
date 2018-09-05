@@ -3,11 +3,6 @@
 //! It serves the use-cases for the [spe3d download manager](https://github.com/Roba1993/SPE3D).
 //!
 
-
-#![feature(const_atomic_usize_new)]
-#![feature(plugin)]
-//#![plugin(clippy)]
-
 #[macro_use] extern crate error_chain;
 #[macro_use]extern crate serde_derive;
 extern crate serde;

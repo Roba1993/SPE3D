@@ -22,12 +22,6 @@ dlc-decrypter = {git = "https://github.com/Roba1993/dlc-decoder"}
 md-5 = "0.7.0"
 digest = { version = "0.7.0", features = ["std"]}
 
-# http server
-rocket = "0.3.10"
-rocket_codegen = "0.3.10"
-rocket_contrib = {version = "0.3.10", default-features = false, features = ["json"]}
-rocket_cors = "0.2.3"
-
 # websocket server
 ws = "0.7.6"
 
@@ -36,3 +30,10 @@ serde = "1.0.56"
 serde_derive = "1.0.56"
 serde_json = "1.0.17"
 toml = "0.4.6"
+
+# http server
+actix-web = "0.7.4"
+futures = "0.1.23"
+bytes = "0.4.9"
+
+failure = "0.1.2"
