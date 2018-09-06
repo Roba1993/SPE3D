@@ -17,23 +17,13 @@ export default class DloadContainer extends Component {
             open: !prevState.open
         }));
         
-        if (!this.state.open) {
-            this.set_selection(e, this.props.container.id);
-        }
-        else {
-            this.set_selection(e, false);
-        }
+        this.set_selection(e, this.props.container.id);
     }
 
     set_selection(e, id) {
         e.preventDefault();
 
-        if (id == this.props.global.ui.selected) {
-            this.props.global.ui.setSelected(false);
-        }
-        else {
-            this.props.global.ui.setSelected(id);
-        }
+        this.props.global.ui.setSelected(id);
     }
 
     get_selected(id) {
