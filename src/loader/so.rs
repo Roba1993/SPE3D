@@ -36,7 +36,7 @@ impl Loader for ShareOnline {
             bail!("The given link wasn't a share-online download link");
         }
         
-        let so_cfg = self.config.get().share_online.get(0).ok_or("No share-online logins defined")?.clone();
+        let so_cfg = self.config.get().get_first_so().ok_or("No share-online logins defined")?.clone();
 
         let usr = so_cfg.username;
         let pwd = so_cfg.password;
@@ -132,7 +132,7 @@ impl ShareOnline {
 
     /// Share-Online premium login
     fn login(&self) -> Result<(String, String)> {
-        let so_cfg = self.config.get().share_online.get(0).ok_or("No share-online logins defined")?.clone();
+        let so_cfg = self.config.get().get_first_so().ok_or("No share-online logins defined")?.clone();
 
         let usr = so_cfg.username;
         let pwd = so_cfg.password;

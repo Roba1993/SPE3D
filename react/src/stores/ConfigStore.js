@@ -14,8 +14,8 @@ export default class ConfigStore {
         this.server = new Server(rawObj.server);
 
         var so = [];
-        rawObj.share_online.forEach(c => {
-            so.push(new ShareOnline(c))
+        rawObj.accounts.forEach(c => {
+            so.push(new Account(c))
         });
         this.share_online.replace(so);
     }
@@ -50,11 +50,13 @@ class Server {
     }
 }
 
-class ShareOnline {
+class Account {
+    @observable hoster;
     @observable username;
     @observable password;
 
     constructor(rawObj) {
+        this.hoster = rawObj.hoster;
         this.username = rawObj.username;
         this.password = rawObj.password;
     }

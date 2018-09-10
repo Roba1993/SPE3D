@@ -1,4 +1,5 @@
 # SPE3D - Configuration
+# rename to `config.toml` to use it
 
 # ip under the webserver should be started
 # If you run locally it's localhost or 127.0.0.1
@@ -8,6 +9,7 @@ ip = 'localhost'
 webserver_port = 8000
 websocket_port = 8001
 
+# share_online premium accounts
 [[share_online]]
 username = 'usr'
 password = 'pwd'
