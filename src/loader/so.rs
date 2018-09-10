@@ -42,7 +42,7 @@ impl Loader for ShareOnline {
         let pwd = so_cfg.password;
 
         // make the request call
-        let info_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=download&lid={}", usr, pwd, id);
+        let info_url = format!("https://api.share-online.biz/account.php?username={}&password={}&act=download&lid={}", usr, pwd, id);
         let mut resp = reqwest::get(&info_url)?;
 
         // only continue if the answer was successfull
@@ -139,7 +139,7 @@ impl ShareOnline {
         let pwd = so_cfg.password;
 
         // download the user data
-        let login_url = format!("http://api.share-online.biz/account.php?username={}&password={}&act=userDetails", usr, pwd);
+        let login_url = format!("https://api.share-online.biz/account.php?username={}&password={}&act=userDetails", usr, pwd);
         let mut resp = reqwest::get(&login_url)?;
 
         // only continue if the answer was successfull
