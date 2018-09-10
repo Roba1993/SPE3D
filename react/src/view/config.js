@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Grid, Menu, Segment, Icon, Form } from 'semantic-ui-react'
 import ConfigServer from '../comp/config-server'
+import ConfigAccounts from '../comp/config-accounts'
 
 export default class Config extends Component {
     state = { activeItem: 'server' }
@@ -17,7 +18,7 @@ export default class Config extends Component {
 
         switch (activeItem) {
             case 'accounts':
-                content = this.render_account();
+                content = <ConfigAccounts global={this.props.global} />
                 break;
             default:
                 content = <ConfigServer global={this.props.global} />
@@ -43,50 +44,6 @@ export default class Config extends Component {
                     {content}
                 </Grid.Column>
             </Grid>
-        )
-    }
-
-    render_account = () => {
-        return (
-            <Segment>
-                <Form>
-                    <Form.Input
-                        fluid
-                        id='form-subcomponent-shorthand-input-first-name'
-                        label='First name'
-                        placeholder='First name'
-                    />
-                    <Form.Input
-                        fluid
-                        id='form-subcomponent-shorthand-input-last-name'
-                        label='Last name'
-                        placeholder='Last name'
-                    />
-                </Form>
-            </Segment>
-        )
-    }
-
-    render_server = () => {
-        const global = this.props.global;
-
-        return (
-            <Segment>
-                <Form>
-                    <Form.Input
-                        fluid
-                        id='ip'
-                        label='Server IP'
-                        placeholder='First name'
-                    />
-                    <Form.Input
-                        fluid
-                        id='form-subcomponent-shorthand-input-last-name'
-                        label='Last name'
-                        placeholder='Last name'
-                    />
-                </Form>
-            </Segment>
         )
     }
 }

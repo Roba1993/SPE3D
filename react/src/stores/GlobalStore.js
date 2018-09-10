@@ -6,7 +6,7 @@ import ConfigStore from "./ConfigStore";
 
 class GlobalStore {
     @observable notify = new NotifyStore();
-    @observable ui = new UiStore();
+    @observable ui = new UiStore(this);
     @observable dload = new DloadStore(this);
     @observable config = new ConfigStore();
 }

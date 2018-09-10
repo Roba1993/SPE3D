@@ -7,7 +7,7 @@ import AddFile from '../comp/add-file';
 @observer
 export default class Links extends Component {
     render() {
-        return <Grid columns={2} divided>
+         return <Grid columns={2} divided>
             <Grid.Row>
                 <Grid.Column>
                     <AddLinks global={this.props.global} />

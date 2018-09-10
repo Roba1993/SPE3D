@@ -11,3 +11,7 @@ websocket_port = 8001
 [[share_online]]
 username = 'usr'
 password = 'pwd'
+
+[[share_online]]
+username = 'usr'
+password = 'pwd'
