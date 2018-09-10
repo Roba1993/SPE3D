@@ -108,7 +108,6 @@ impl Loader for ShareOnline {
 
         // hash the file
         let hash = Md5::digest_reader(&mut File::open(path)?)?;
-
         let hash = format!("{:x}", hash);
         
         // check the hash
