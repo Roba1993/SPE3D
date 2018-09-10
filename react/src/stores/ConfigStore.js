@@ -6,7 +6,8 @@ export default class ConfigStore {
     @observable share_online = [];
 
 
-    constructor() {
+    constructor(global) {
+        this.global = global;
         this.fetchConfig();
     }
 
