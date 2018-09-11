@@ -12,6 +12,7 @@ import Links from './view/links';
 import Config from './view/config';
 import Logo from './comp/logo';
 import Notify from './comp/Notify';
+import AddAccount from './comp/add-account';
 
 @observer
 class App extends Component {
@@ -32,6 +33,11 @@ class App extends Component {
                 <Link to="/links" style={styleButton}><Icon name='plus' size='large' /></Link>
                 <Icon name='trash' size='large' color={this.props.global.ui.selected ? 'green' : 'grey'} onClick={(e) => { this.deleteLink(e) }} />
                 <Icon name='arrow down' size='large' color={this.props.global.ui.selected ? 'green' : 'grey'} onClick={(e) => { this.startDownload(e) }} />
+            </Menu.Item>
+        }
+        else if (this.props.global.ui.path == '/config') {
+            return <Menu.Item name='actions' style={styleButtons} active={false}>
+                <Icon.Group size='large' onClick={(e) => { global.ui.modalAddAccount=true }}><Icon name='key' /><Icon corner name='plus' /></Icon.Group>
             </Menu.Item>
         }
     }
@@ -55,6 +61,7 @@ class App extends Component {
                         <Route exact path="/" render={(r) => { global.ui.path = r.location.pathname; return <Home global={global} /> }} />
                         <Route path="/links" render={(r) => { global.ui.path = r.location.pathname; return <Links global={global} /> }} />
                         <Route path="/config" render={(r) => { global.ui.path = r.location.pathname; return <Config location={location} global={global} /> }} />
+                        <AddAccount global={global}></AddAccount>
                     </Segment>
                 </Sidebar.Pusher>
                 <Notify global={global} />

@@ -31,6 +31,26 @@ export default class ConfigStore {
             })
     }
 
+    addAccount(acc) {
+        fetch("http://" + window.location.hostname + ":8000/api/config/account",
+            {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(acc)
+            })
+            .then(res => {
+                if (res.status != 200) {
+                    this.global.notify.createErrorMsg("Add of Account failed", "The server was not able to interpret the account settings");
+                }
+                else {
+                    this.global.notify.createOkMsg("Account added", "The server successfully added a hoster account");
+                }
+            })
+    }
+
     replaceConfig(rawObj) {
         this.server = new Server(rawObj.server);
 

@@ -48,6 +48,7 @@ fn main() {
                 .resource("/api/add-dlc", |r| r.method(http::Method::POST).with(api_add_dlc))
                 .resource("/api/config", |r| r.method(http::Method::GET).with(api_config))
                 .resource("/api/config/server", |r| r.method(http::Method::POST).with(post_config_server))
+                .resource("/api/config/account", |r| r.method(http::Method::POST).with(post_config_account))
                 .handler("/", StaticFiles::new("www").unwrap().index_file("index.html"))
                 .finish(),
         ]
@@ -114,5 +115,10 @@ fn api_config(req: HttpRequest<DownloadManager>) -> Json<::spe3d::config::Config
 
 fn post_config_server(req: HttpRequest<DownloadManager>, json: Json<::spe3d::config::ConfigServer>) -> Result<String> {
     req.state().get_config().set_server(json.into_inner()).unwrap();    
+    Ok("".to_string())
+}
+
+fn post_config_account(req: HttpRequest<DownloadManager>, json: Json<::spe3d::config::ConfigAccount>) -> Result<String> {
+    req.state().get_config().add_account(json.into_inner()).unwrap();    
     Ok("".to_string())
 }

@@ -66,6 +66,13 @@ impl Config {
 
         Ok(())
     }
+
+    /// Add a new account to the config
+    pub fn add_account(&self, account: ConfigAccount) -> Result<()> {
+        self.data.write()?.accounts.push(account);
+        self.data.read()?.to_config_file()?;
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

@@ -4,6 +4,7 @@ export default class UiStore {
     gloabl;
     @observable selected = false;
     @observable path = '/';
+    @observable modalAddAccount = false;
 
     constructor(global) {
         this.gloabl = global;
