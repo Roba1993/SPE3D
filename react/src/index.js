@@ -12,8 +12,6 @@ import Links from './view/links';
 import Config from './view/config';
 import Logo from './comp/logo';
 import Notify from './comp/Notify';
-import NavButtons from './comp/nav-buttons';
-
 
 @observer
 class App extends Component {
