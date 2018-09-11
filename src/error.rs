@@ -37,7 +37,8 @@ error_chain!{
         Regex(::regex::Error);
         ParseIntError(::std::num::ParseIntError);
         SerdeJson(::serde_json::error::Error);
-        Toml(::toml::de::Error);
+        TomlDe(::toml::de::Error);
+        TomlSer(::toml::ser::Error);
         RecvError(::std::sync::mpsc::RecvError);
     }
 

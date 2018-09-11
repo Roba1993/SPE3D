@@ -19,7 +19,7 @@
 
 use error::*;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::sync::{Arc, RwLock};
 use toml;
 
@@ -35,6 +35,8 @@ impl Config {
             Ok(c) => c,
             Err(_) => ConfigData::default(),
         };
+
+        data.to_config_file();
 
         Config {
             data: Arc::new(RwLock::new(data)),
@@ -79,10 +81,26 @@ impl ConfigData {
             }
         }
 
-        Ok(ConfigData {
-            server,
-            accounts
-        })
+        Ok(ConfigData { server, accounts })
+    }
+
+    fn to_config_file(&self) -> Result<()> {
+        let mut out = String::from("# This is the SPE3D config file\n");
+        out.push_str("# it gets overiten by the server from time to time!\n\n");
+        out.push_str("[server]\n");
+        out.push_str(&toml::to_string_pretty(&self.server)?);
+        out.push_str("\n");
+
+        for a in &self.accounts {
+            out.push_str(&format!("\n[[{}]]\n", a.hoster));
+            out.push_str(&format!("username = '{}'\n", a.username));
+            out.push_str(&format!("password = '{}'\n", a.password));
+        }
+
+        let mut file = File::create("./config/config.toml")?;
+        file.write_all(&out.into_bytes())?;
+
+        Ok(())
     }
 
     pub fn get_first_so(&self) -> Option<ConfigAccount> {
@@ -135,4 +153,13 @@ pub struct ConfigAccount {
 pub enum ConfigHoster {
     ShareOnline,
     Unknown(String),
+}
+
+impl ::std::fmt::Display for ConfigHoster {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        match self {
+            ConfigHoster::ShareOnline => write!(f, "share_online"),
+            ConfigHoster::Unknown(s) => write!(f, "{}", s),
+        }
+    }
 }
