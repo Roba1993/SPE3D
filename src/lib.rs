@@ -28,7 +28,6 @@ use models::{DownloadPackage, FileStatus, SmartDownloadList};
 use std::thread;
 use loader::Downloader;
 use dlc_decrypter::DlcDecoder;
-use config::ConfigData;
 
 /// Main entry point for the API. This structure allows to add potential downloads
 /// to a shared list and gives the ability to start this downloads.

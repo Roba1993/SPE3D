@@ -1,22 +1,22 @@
 import React, { Component } from 'react'
+import { observer } from "mobx-react"
 import { Grid, Menu, Segment, Icon, Form } from 'semantic-ui-react'
 import ConfigServer from '../comp/config-server'
 import ConfigAccounts from '../comp/config-accounts'
 
+@observer
 export default class Config extends Component {
-    state = { activeItem: 'server' }
-
     handleItemClick = (e, { name }) => {
-        this.setState({ activeItem: name });
+        this.props.global.ui.configTab = name;
         // with each menu change we load the actual config data
         this.props.global.config.fetchConfig();
     }
 
     render() {
-        const { activeItem } = this.state;
+        const { configTab } = this.props.global.ui;
         let content;
 
-        switch (activeItem) {
+        switch (configTab) {
             case 'accounts':
                 content = <ConfigAccounts global={this.props.global} />
                 break;
@@ -29,11 +29,11 @@ export default class Config extends Component {
             <Grid>
                 <Grid.Column width={4}>
                     <Menu fluid vertical tabular size='large'>
-                        <Menu.Item name='server' active={activeItem === 'server'} onClick={this.handleItemClick} >
+                        <Menu.Item name='server' active={configTab === 'server'} onClick={this.handleItemClick} >
                             <Icon name='server' />
                             Server
                         </Menu.Item>
-                        <Menu.Item name='accounts' active={activeItem === 'accounts'} onClick={this.handleItemClick}  >
+                        <Menu.Item name='accounts' active={configTab === 'accounts'} onClick={this.handleItemClick}  >
                             <Icon name='key' />
                             Accounts
                         </Menu.Item>

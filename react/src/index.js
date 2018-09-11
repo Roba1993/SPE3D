@@ -27,6 +27,12 @@ class App extends Component {
         global.dload.startDload(global.ui.selected);
     }
 
+    deleteAccount(e) {
+        e.preventDefault();
+        global.config.removeAccount(global.ui.accountSelected);
+        global.ui.accountSelected = false;
+    }
+
     getMenu() {
         if (this.props.global.ui.path == '/') {
             return <Menu.Item name='actions' style={styleButtons} active={false}>
@@ -35,9 +41,10 @@ class App extends Component {
                 <Icon name='arrow down' size='large' color={this.props.global.ui.selected ? 'green' : 'grey'} onClick={(e) => { this.startDownload(e) }} />
             </Menu.Item>
         }
-        else if (this.props.global.ui.path == '/config') {
+        else if (this.props.global.ui.path == '/config' && this.props.global.ui.configTab == 'accounts' ) {
             return <Menu.Item name='actions' style={styleButtons} active={false}>
-                <Icon.Group size='large' onClick={(e) => { global.ui.modalAddAccount=true }}><Icon name='key' /><Icon corner name='plus' /></Icon.Group>
+                <Icon.Group size='large' onClick={(e) => { global.ui.modalAddAccount = true }}><Icon name='key' /><Icon corner name='plus' /></Icon.Group>
+                <Icon name='trash' size='large' color={this.props.global.ui.accountSelected ? 'green' : 'grey'} onClick={(e) => { this.deleteAccount(e) }} />
             </Menu.Item>
         }
     }

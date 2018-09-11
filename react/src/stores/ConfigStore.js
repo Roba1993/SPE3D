@@ -51,6 +51,25 @@ export default class ConfigStore {
             })
     }
 
+    removeAccount(id) {
+        fetch("http://" + window.location.hostname + ":8000/api/config/account/"+id,
+            {
+                method: "DELETE",
+                headers: {
+                    'Accept': 'application/json, text/plain, */*'
+                },
+            })
+            .then(res => {
+                if (res.status != 200) {
+                    this.global.notify.createErrorMsg("Removing of Account failed", "The server was not able to remove the account");
+                }
+                else {
+                    this.global.notify.createOkMsg("Account removed", "The server successfully removed a hoster account");
+                    this.fetchConfig();
+                }
+            })
+    }
+
     replaceConfig(rawObj) {
         this.server = new Server(rawObj.server);
 
@@ -92,11 +111,13 @@ class Server {
 }
 
 class Account {
+    @observable id;
     @observable hoster;
     @observable username;
     @observable password;
 
     constructor(rawObj) {
+        this.id = rawObj.id;
         this.hoster = rawObj.hoster;
         this.username = rawObj.username;
         this.password = rawObj.password;

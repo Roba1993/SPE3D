@@ -22,6 +22,10 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::sync::{Arc, RwLock};
 use toml;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+
+static IDCOUNTER: AtomicUsize = AtomicUsize::new(1);
 
 /// The Config element which can be easily shared between different threads and lifetimes.
 #[derive(Default, Debug, Clone)]
@@ -69,7 +73,16 @@ impl Config {
 
     /// Add a new account to the config
     pub fn add_account(&self, account: ConfigAccount) -> Result<()> {
+        let mut account = account;
+        account.id = IDCOUNTER.fetch_add(1, Ordering::SeqCst);
         self.data.write()?.accounts.push(account);
+        self.data.read()?.to_config_file()?;
+        Ok(())
+    }
+
+    /// Removes a specific account by it's id
+    pub fn remove_account(&self, id: usize) -> Result<()> {
+        self.data.write()?.accounts.retain(|ref a| a.id != id);
         self.data.read()?.to_config_file()?;
         Ok(())
     }
@@ -98,6 +111,7 @@ impl ConfigData {
         if let Some(so) = tml["share_online"].as_array() {
             for s in so {
                 accounts.push(ConfigAccount {
+                    id: IDCOUNTER.fetch_add(1, Ordering::SeqCst),
                     hoster: ConfigHoster::ShareOnline,
                     username: s["username"].as_str().unwrap_or("").to_string(),
                     password: s["password"].as_str().unwrap_or("").to_string(),
@@ -168,6 +182,8 @@ impl Default for ConfigServer {
 /// Share-Online account configuration
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ConfigAccount {
+    #[serde(skip_deserializing)]
+    pub id: usize,
     pub hoster: ConfigHoster,
     pub username: String,
     pub password: String,

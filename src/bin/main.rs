@@ -49,6 +49,7 @@ fn main() {
                 .resource("/api/config", |r| r.method(http::Method::GET).with(api_config))
                 .resource("/api/config/server", |r| r.method(http::Method::POST).with(post_config_server))
                 .resource("/api/config/account", |r| r.method(http::Method::POST).with(post_config_account))
+                .resource("/api/config/account/{id}", |r| r.method(http::Method::DELETE).with(delete_config_account))
                 .handler("/", StaticFiles::new("www").unwrap().index_file("index.html"))
                 .finish(),
         ]
@@ -120,5 +121,11 @@ fn post_config_server(req: HttpRequest<DownloadManager>, json: Json<::spe3d::con
 
 fn post_config_account(req: HttpRequest<DownloadManager>, json: Json<::spe3d::config::ConfigAccount>) -> Result<String> {
     req.state().get_config().add_account(json.into_inner()).unwrap();    
+    Ok("".to_string())
+}
+
+fn delete_config_account(req: HttpRequest<DownloadManager>) -> Result<String> {
+    let id: usize = req.match_info().query("id")?;
+    req.state().get_config().remove_account(id).unwrap();
     Ok("".to_string())
 }
