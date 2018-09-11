@@ -36,8 +36,6 @@ impl Config {
             Err(_) => ConfigData::default(),
         };
 
-        data.to_config_file();
-
         Config {
             data: Arc::new(RwLock::new(data)),
         }
@@ -49,9 +47,28 @@ impl Config {
             Err(_) => ConfigData::default(),
         }
     }
+
+    /// Returns a copy of the server config
+    pub fn get_server(&self) -> ConfigServer {
+        match self.data.read() {
+            Ok(d) => d.server.clone(),
+            Err(_) => ConfigServer::default(),
+        }
+    }
+
+    /// Set the given server config for the global config
+    pub fn set_server(&self, server: ConfigServer) -> Result<()> {
+        // when settings have changed, update them and save to config file
+        if server != self.get_server() {
+            self.data.write()?.server = server;
+            self.data.read()?.to_config_file()?;
+        }
+
+        Ok(())
+    }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ConfigData {
     pub server: ConfigServer,
     pub accounts: Vec<ConfigAccount>,
@@ -124,7 +141,7 @@ impl Default for ConfigData {
 }
 
 /// Server Configuration
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ConfigServer {
     pub ip: String,
     pub webserver_port: usize,

@@ -47,6 +47,7 @@ fn main() {
                 .resource("/api/delete-link/{id}", |r| r.method(http::Method::POST).with(api_remove_link))
                 .resource("/api/add-dlc", |r| r.method(http::Method::POST).with(api_add_dlc))
                 .resource("/api/config", |r| r.method(http::Method::GET).with(api_config))
+                .resource("/api/config/server", |r| r.method(http::Method::POST).with(post_config_server))
                 .handler("/", StaticFiles::new("www").unwrap().index_file("index.html"))
                 .finish(),
         ]
@@ -108,5 +109,10 @@ fn api_add_dlc(req: HttpRequest<DownloadManager>) -> FutureResponse<HttpResponse
 }
 
 fn api_config(req: HttpRequest<DownloadManager>) -> Json<::spe3d::config::ConfigData> {
-    Json(req.state().get_config_data())
+    Json(req.state().get_config().get())
+}
+
+fn post_config_server(req: HttpRequest<DownloadManager>, json: Json<::spe3d::config::ConfigServer>) -> Result<String> {
+    req.state().get_config().set_server(json.into_inner()).unwrap();    
+    Ok("".to_string())
 }

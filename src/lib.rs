@@ -117,8 +117,8 @@ impl DownloadManager {
     }
 
     /// Get the actual configuration
-    pub fn get_config_data(&self) -> ConfigData {
-        self.config.get()
+    pub fn get_config(&self) -> Config {
+        self.config.clone()
     }
 
     /********************* Private Functions *****************/

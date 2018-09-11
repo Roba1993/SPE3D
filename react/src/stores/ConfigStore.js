@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { observable, toJS } from "mobx";
 
 export default class ConfigStore {
     global;
@@ -9,6 +9,26 @@ export default class ConfigStore {
     constructor(global) {
         this.global = global;
         this.fetchConfig();
+    }
+
+    updateServer() {
+        fetch("http://" + window.location.hostname + ":8000/api/config/server",
+            {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(this.server)
+            })
+            .then(res => {
+                if (res.status != 200) {
+                    this.global.notify.createErrorMsg("Update of server settings failed", "The server was not able to interpret the server settings");
+                }
+                else {
+                    this.global.notify.createOkMsg("Server settings updated", "The server successfully updated the server settings");
+                }
+            })
     }
 
     replaceConfig(rawObj) {
@@ -47,7 +67,7 @@ class Server {
     constructor(rawObj) {
         this.ip = rawObj.ip;
         this.webserver_port = rawObj.webserver_port;
-        this.websocket_port = rawObj.websocket_port;    
+        this.websocket_port = rawObj.websocket_port;
     }
 }
 

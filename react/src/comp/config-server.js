@@ -9,7 +9,7 @@ export default class ConfigServer extends Component {
     }
 
     handleSubmit = () => {
-        // send update request
+        this.props.global.config.updateServer();
     }
 
     render() {
