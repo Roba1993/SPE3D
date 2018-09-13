@@ -1,7 +1,6 @@
 //! Holding all data models which are shared across the complete crate.
 
 use error::*;
-use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use dlc_decrypter::DlcPackage;
 use std::sync::{Arc, RwLock, Mutex};
@@ -76,7 +75,6 @@ pub struct DownloadFile {
     pub speed: usize,
     pub hash: FileHash,
     pub file_id: String,
-    pub infos: HashMap<String, String>
 }
 
 impl DownloadFile {
@@ -92,7 +90,6 @@ impl DownloadFile {
             speed: 0,
             hash: FileHash::None,
             file_id: "".to_string(),
-            infos: HashMap::new(),
         }
     }
 
