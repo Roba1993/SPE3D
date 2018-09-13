@@ -9,10 +9,9 @@ extern crate futures;
 extern crate bytes;
 
 pub mod error;
-pub mod config;
 pub mod websocket;
 
-use config::Config;
+use spe3d::config::Config;
 use spe3d::models::DownloadPackage;
 use spe3d::DownloadManager;
 
@@ -31,6 +30,11 @@ fn main() {
     // create the download manager
     let dm = DownloadManager::new(config.clone().into()).unwrap();
     dm.start();
+
+    // test ecke
+    let so = ::spe3d::loader::so::ShareOnline::new(config.clone());
+    //so.update_account(&mut config.get().get_first_so().unwrap());
+    //so.check_url("http://www.share-online.biz/dl/NPE1KXEPFQM").unwrap();
 
     // start the websocket server and add it to the download manager
     websocket::start_ws(&config, &dm);

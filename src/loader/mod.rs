@@ -19,14 +19,17 @@ use std::time::{Duration, Instant};
 
 /// This `Loader` defines which funtionalities are used to download a file from a source
 pub trait Loader {
-    /// Check a url if it can be loaded with the laoder. Retuns an error if not
-    fn check(&self, url: &str) -> Result<Option<DownloadFile>>;
+    /// This function updates an Share-Online account with the actual status
+    fn update_account(&self, account: &mut ::config::ConfigAccount) -> Result<()> ;
+
+    /// Check the download url and return the file info
+    fn check_url(&self, url: &str) -> Result<Option<DownloadFile>>;
 
     /// Download a file, with this laoder
     fn download(&self, file: &DownloadFile) -> Result<::reqwest::Response>;
 
     /// Prove that the downloaded file is correct
-    fn prove(&self, file: &DownloadFile, path: &str) -> Result<bool>;
+    fn prove_download(&self, file: &DownloadFile, path: &str) -> Result<bool>;
 }
 
 
@@ -75,12 +78,23 @@ impl Downloader {
         // loop over all the loader
         for l in self.loader.iter() {
             // return the first valid file check info
-            if let Ok(Some(f)) = l.check(&link) {
+            if let Ok(Some(f)) = l.check_url(&link) {
                 return Ok(f);
             }
         }
 
         Err(Error::from("Can't identify file info"))
+    }
+
+    /// Update and complete the account data
+    pub fn update_account(&self, account: &mut ::config::ConfigAccount) -> Result<()> {
+        // loop over all the loader
+        for l in self.loader.iter() {
+            // each loader can try to update the account
+            let _ = l.update_account(account);
+        }
+
+        Ok(())
     }
 
     /*************************** Private Functions ************************/
@@ -119,7 +133,7 @@ impl Downloader {
         self.d_list.set_downloaded(f_info.id(), f_info.size)?;
 
         // check if the download can be proven
-        if self.loader.iter().any(|l| l.prove(&f_info, &path).unwrap_or(false)) {
+        if self.loader.iter().any(|l| l.prove_download(&f_info, &path).unwrap_or(false)) {
             self.d_list.set_status(id, &FileStatus::Downloaded)?;
         }
         else {

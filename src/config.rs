@@ -115,6 +115,7 @@ impl ConfigData {
                     hoster: ConfigHoster::ShareOnline,
                     username: s["username"].as_str().unwrap_or("").to_string(),
                     password: s["password"].as_str().unwrap_or("").to_string(),
+                    status: ConfigAccountStatus::Unknown,
                 });
             }
         }
@@ -187,6 +188,21 @@ pub struct ConfigAccount {
     pub hoster: ConfigHoster,
     pub username: String,
     pub password: String,
+    pub status: ConfigAccountStatus,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum ConfigAccountStatus {
+    Unknown,
+    NotValid,
+    Free,
+    Premium
+}
+
+impl Default for ConfigAccountStatus {
+    fn default() -> ConfigAccountStatus {
+        ConfigAccountStatus::Unknown
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

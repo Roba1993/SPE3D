@@ -74,7 +74,7 @@ export default class AddLinks extends Component {
                 </Button.Content>
             </Button>
 
-            <br /><br /><p>Example link: http://www.share-online.biz/dl/6HE8ZA0PXQM8</p>
+            <br /><br /><p>Example link: http://www.share-online.biz/dl/NPE1KXEPFQM</p>
         </div>
     }
 }

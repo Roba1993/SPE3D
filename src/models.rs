@@ -68,13 +68,14 @@ impl From<DlcPackage> for DownloadPackage {
 pub struct DownloadFile {
     id: usize,
     pub status: FileStatus,
-    pub host: FileHoster,
+    pub hoster: FileHoster,
     pub name: String,
     pub url: String,
     pub size: usize,
     pub downloaded: usize,
     pub speed: usize,
     pub hash: FileHash,
+    pub file_id: String,
     pub infos: HashMap<String, String>
 }
 
@@ -83,13 +84,14 @@ impl DownloadFile {
         DownloadFile {
             id: IDCOUNTER.fetch_add(1, Ordering::SeqCst),
             status: FileStatus::Unknown,
-            host: FileHoster::Unknown,
+            hoster: FileHoster::Unknown,
             name: "".to_string(),
             url: "".to_string(),
             size: 0,
             downloaded: 0,
             speed: 0,
             hash: FileHash::None,
+            file_id: "".to_string(),
             infos: HashMap::new(),
         }
     }
