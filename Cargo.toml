@@ -17,6 +17,8 @@ reqwest = "0.8.5"
 regex = "1.0.0"
 error-chain = "0.11.0"
 dlc-decrypter = "0.2.1"
+jd-decrypter = "0.1.1"
+base64 = "0.9.3"
 
 # md5 hasher
 md-5 = "0.7.0"

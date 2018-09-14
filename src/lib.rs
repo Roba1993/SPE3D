@@ -16,6 +16,7 @@ extern crate reqwest;
 extern crate serde;
 extern crate serde_json;
 extern crate toml;
+extern crate jd_decrypter;
 
 pub mod config;
 pub mod error;
@@ -170,7 +171,7 @@ impl DownloadManager {
         // on error also check the account
         for acc in self.config.get().accounts {
             if let Ok(e) = acc.checked.elapsed() {
-                if e > ::std::time::Duration::from_secs(10) {
+                if e > ::std::time::Duration::from_secs(300) {
                     self.check_account(acc.id)?;
                     break;
                 }

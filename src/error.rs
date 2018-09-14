@@ -41,6 +41,7 @@ error_chain!{
         TomlSer(::toml::ser::Error);
         RecvError(::std::sync::mpsc::RecvError);
         AddrParseError(::std::net::AddrParseError);
+        JdDecryptor(::jd_decrypter::Error);
     }
 
     links{

@@ -11,16 +11,12 @@ export default class AddAccount extends Component {
     }
 
     onDrop(acceptedFiles) {
-        console.log("drop");
-        return;
-
-
         acceptedFiles.forEach(file => {
             const reader = new FileReader();
             reader.onload = () => {
                 const fileAsBinaryString = reader.result;
 
-                fetch("http://" + window.location.hostname + ":8000/api/add-dlc",
+                fetch("http://" + window.location.hostname + ":8000/api/add-ejs",
                     {
                         method: "POST",
                         headers: {
@@ -31,17 +27,17 @@ export default class AddAccount extends Component {
                     })
                     .then(res => {
                         if (res.status != 200) {
-                            this.props.global.notify.createErrorMsg("The .dlc file is not valid", "The server was not able to interpret the .dlc file");
+                            this.props.global.notify.createErrorMsg("The .ejs file is not valid", "The server was not able to interpret password file");
                         }
                         else {
-                            this.props.global.notify.createOkMsg("The .dlc file is valid", "The server successfully added the .dlc file");
+                            this.props.global.notify.createOkMsg("The .ejs file is valid", "The server successfully added the accounts");
                         }
                     })
             };
-            reader.onabort = () => this.props.global.notify.createErrorMsg("The .dlc file reading interrupted", "The file reading was interrupted");
-            reader.onerror = () => this.props.global.notify.createErrorMsg("The .dlc file reading failed", "The file reading failed");
+            reader.onabort = () => this.props.global.notify.createErrorMsg("The .ejs file reading interrupted", "The file reading was interrupted");
+            reader.onerror = () => this.props.global.notify.createErrorMsg("The .ejs file reading failed", "The file reading failed");
 
-            reader.readAsBinaryString(file);
+            reader.readAsDataURL(file);
         });
     }
 
@@ -73,6 +69,7 @@ export default class AddAccount extends Component {
                             <Grid.Column>
                                 <Dropzone onDrop={this.onDrop.bind(this)} >
                                     <p>Try dropping some files here, or click to select files to upload.</p>
+                                    <p>Only JDownloader .ejs account files are supported.</p>
                                 </Dropzone>
                             </Grid.Column>
                         </Grid.Row>

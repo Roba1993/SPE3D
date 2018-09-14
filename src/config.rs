@@ -93,6 +93,20 @@ impl Config {
         self.data.write()?.accounts.push(acc);
         Ok(())
     }
+
+    /// parse a JDownloader password .ejs file and import the known
+    /// accounts
+    pub fn parse_jd_accounts(&self, data: &[u8]) -> Result<()> {
+        let accs = ::jd_decrypter::JdAccountList::from_data(data)?;
+        
+        if let Some(so) = accs.as_ref().get("share-online.biz") {
+            for a in so {
+                self.add_account(a.into())?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -204,6 +218,19 @@ pub struct ConfigAccount {
     pub checked: ::std::time::SystemTime,
 }
 
+impl<'a> From<&'a ::jd_decrypter::JdAccount> for ConfigAccount {
+    fn from(data: &'a ::jd_decrypter::JdAccount) -> ConfigAccount {
+        ConfigAccount {
+            id: 0,
+            hoster: data.hoster.clone().into(),
+            username: data.user.clone(),
+            password: data.password.clone(),
+            status: ConfigAccountStatus::default(),
+            checked: ::std::time::SystemTime::now(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ConfigAccountStatus {
     Unknown,
@@ -229,6 +256,17 @@ impl ::std::fmt::Display for ConfigHoster {
         match self {
             ConfigHoster::ShareOnline => write!(f, "share_online"),
             ConfigHoster::Unknown(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl From<String> for ConfigHoster {
+    fn from(data: String) -> ConfigHoster {
+        if data == "share-online.biz" {
+            ConfigHoster::ShareOnline
+        }
+        else {
+            ConfigHoster::Unknown(data)
         }
     }
 }

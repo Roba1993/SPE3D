@@ -4,6 +4,7 @@ extern crate serde;
 extern crate serde_json;
 extern crate spe3d;
 extern crate warp;
+extern crate base64;
 
 use spe3d::config::Config;
 use spe3d::DownloadManager;
@@ -175,6 +176,16 @@ fn main() {
             "*",
         ));
 
+    let post_add_ejs = warp::post2()
+        .and(api.and(warp::path("add-ejs")).and(warp::path::index()))
+        .and(dmw.clone())
+        .and(warp::body::concat())
+        .and_then(post_add_ejs)
+        .with(warp::reply::with::header(
+            "Access-Control-Allow-Origin",
+            "*",
+        ));
+
     let ws_updates = warp::path("updates")
         // The `ws2()` filter will prepare Websocket handshake...
         .and(warp::ws2())
@@ -198,6 +209,7 @@ fn main() {
         .or(post_config_server)
         .or(post_config_account)
         .or(delete_config_account)
+        .or(post_add_ejs)
         .or(ws_updates)
         .or(options);
 
@@ -287,6 +299,19 @@ fn delete_config_account(
     dm: DownloadManager,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     dm.get_config().remove_account(id).unwrap();
+    Ok("")
+}
+
+fn post_add_ejs(
+    dm: DownloadManager,
+    dlc: warp::filters::body::FullBody,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    let mut s = String::new();
+    dlc.reader().read_to_string(&mut s).unwrap();
+
+    let s = s.replacen("data:application/octet-stream;base64,", "", 1);
+
+    dm.get_config().parse_jd_accounts(&::base64::decode(&s).unwrap()).unwrap();
     Ok("")
 }
 
