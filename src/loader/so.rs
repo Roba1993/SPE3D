@@ -25,7 +25,7 @@ impl Loader for ShareOnline {
     fn update_account(&self, account: &mut ::config::ConfigAccount) -> Result<()> {
         // This implementation can only check share-online accounts
         if account.hoster != ::config::ConfigHoster::ShareOnline {
-            return Ok(());
+            bail!("Not a Share-Online Account");
         }
 
         let url = format!(

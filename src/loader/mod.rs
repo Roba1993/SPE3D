@@ -91,7 +91,10 @@ impl Downloader {
         // loop over all the loader
         for l in self.loader.iter() {
             // each loader can try to update the account
-            let _ = l.update_account(account);
+            if let Ok(_) = l.update_account(account) {
+                // when a loader was responsible set the updated time
+                account.checked = ::std::time::SystemTime::now();
+            }
         }
 
         Ok(())

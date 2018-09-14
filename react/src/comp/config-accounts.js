@@ -37,18 +37,22 @@ export default class ConfigServer extends Component {
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell>Hoster</Table.HeaderCell>
+                            <Table.HeaderCell>ID</Table.HeaderCell>
                             <Table.HeaderCell>User</Table.HeaderCell>
                             <Table.HeaderCell>Password</Table.HeaderCell>
-                            <Table.HeaderCell>ID</Table.HeaderCell>
+                            <Table.HeaderCell>Last Checked</Table.HeaderCell>
+                            <Table.HeaderCell>Status</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
                         {this.props.global.config.share_online.map((item, index) => (
                             <Table.Row key={index} positive={this.isSelected(item.id)} onClick={(e) => { this.select(item.id) }}>
                                 <Table.Cell><Image src='https://buypremium24.com/image/cache/data/hoster/shareonline-500x500.png' avatar />Share-Online</Table.Cell>
+                                <Table.Cell>{item.id}</Table.Cell>
                                 <Table.Cell>{item.username}</Table.Cell>
                                 <Table.Cell>{item.password}</Table.Cell>
-                                <Table.Cell>{item.id}</Table.Cell>
+                                <Table.Cell>{item.checked}</Table.Cell>
+                                <Table.Cell>{item.status}</Table.Cell>
                             </Table.Row>
                         ))}
                     </Table.Body>

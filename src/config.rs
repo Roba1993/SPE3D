@@ -86,6 +86,13 @@ impl Config {
         self.data.read()?.to_config_file()?;
         Ok(())
     }
+
+    /// Updates an account
+    pub fn update_account(&self, acc: ConfigAccount) -> Result<()> {
+        self.data.write()?.accounts.retain(|ref a| a.id != acc.id);
+        self.data.write()?.accounts.push(acc);
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -116,6 +123,7 @@ impl ConfigData {
                     username: s["username"].as_str().unwrap_or("").to_string(),
                     password: s["password"].as_str().unwrap_or("").to_string(),
                     status: ConfigAccountStatus::Unknown,
+                    checked: ::std::time::SystemTime::now(),
                 });
             }
         }
@@ -189,6 +197,9 @@ pub struct ConfigAccount {
     pub username: String,
     pub password: String,
     pub status: ConfigAccountStatus,
+    #[serde(skip_deserializing)]
+    #[serde(default = "::std::time::SystemTime::now")]
+    pub checked: ::std::time::SystemTime,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

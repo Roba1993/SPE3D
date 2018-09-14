@@ -1,4 +1,4 @@
-import { observable, toJS } from "mobx";
+import { observable, computed } from "mobx";
 
 export default class ConfigStore {
     global;
@@ -115,11 +115,33 @@ class Account {
     @observable hoster;
     @observable username;
     @observable password;
+    @observable status;
+    @observable raw_checked;
+    @computed get checked() { return formatTime((new Date() / 1000) - this.raw_checked.secs_since_epoch) }
 
     constructor(rawObj) {
         this.id = rawObj.id;
         this.hoster = rawObj.hoster;
         this.username = rawObj.username;
         this.password = rawObj.password;
+        this.status = rawObj.status;
+        this.raw_checked = rawObj.checked;
     }
+}
+
+
+function formatTime(seconds) {
+    if (seconds < 60) return seconds.toFixed(0) + ' Seconds';
+
+    var min = (seconds / 60).toFixed(0);
+    if (min < 60) {
+        return min + " Minutes";
+    }
+
+    var hours = (min / 60).toFixed(0);
+    if (hours < 24) {
+        return hours + " Hours";
+    }
+
+    return (hours / 24).toFixed(2) + " Days";
 }
