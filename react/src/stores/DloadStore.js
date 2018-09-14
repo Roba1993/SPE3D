@@ -83,7 +83,6 @@ export default class DloadStore {
     websocket() {
         var websocket = new WebSocket('ws://' + window.location.hostname + ':8000/updates');
         websocket.onmessage = (evt) => {
-            console.log(evt.data)
             this.replaceDloads(JSON.parse(evt.data))
         }
     }

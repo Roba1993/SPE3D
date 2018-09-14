@@ -1,4 +1,4 @@
-import { observable, computed } from "mobx";
+import { observable, computed, action } from "mobx";
 
 export default class ConfigStore {
     global;
@@ -100,13 +100,15 @@ export default class ConfigStore {
 
 class Server {
     @observable ip;
-    @observable webserver_port;
-    @observable websocket_port;
+    @observable port;
 
     constructor(rawObj) {
         this.ip = rawObj.ip;
-        this.webserver_port = rawObj.webserver_port;
-        this.websocket_port = rawObj.websocket_port;
+        this.port = rawObj.port;
+    }
+
+    @action setPort(port) {
+        this.port = parseInt(port);
     }
 }
 

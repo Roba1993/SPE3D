@@ -161,7 +161,7 @@ impl ConfigData {
     }
 
     pub fn get_server_addr(&self) -> Result<::std::net::SocketAddr> {
-        Ok(format!("{}:{}", self.server.ip, self.server.webserver_port).parse()?)
+        Ok(format!("{}:{}", self.server.ip, self.server.port).parse()?)
     }
 }
 
@@ -178,16 +178,14 @@ impl Default for ConfigData {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ConfigServer {
     pub ip: String,
-    pub webserver_port: usize,
-    pub websocket_port: usize,
+    pub port: usize,
 }
 
 impl Default for ConfigServer {
     fn default() -> ConfigServer {
         ConfigServer {
             ip: "0.0.0.0".to_string(),
-            webserver_port: 8000,
-            websocket_port: 8001,
+            port: 8000,
         }
     }
 }
