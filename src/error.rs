@@ -40,6 +40,7 @@ error_chain!{
         TomlDe(::toml::de::Error);
         TomlSer(::toml::ser::Error);
         RecvError(::std::sync::mpsc::RecvError);
+        AddrParseError(::std::net::AddrParseError);
     }
 
     links{

@@ -159,6 +159,10 @@ impl ConfigData {
 
         bail!("No account available with this information");
     }
+
+    pub fn get_server_addr(&self) -> Result<::std::net::SocketAddr> {
+        Ok(format!("{}:{}", self.server.ip, self.server.webserver_port).parse()?)
+    }
 }
 
 impl Default for ConfigData {

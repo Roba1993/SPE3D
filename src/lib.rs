@@ -1,3 +1,5 @@
+#![recursion_limit="128"]
+
 //! This create provides the functionality of a download manager as a crate functionality.
 //!
 //! It serves the use-cases for the [spe3d download manager](https://github.com/Roba1993/SPE3D).
