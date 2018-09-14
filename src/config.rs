@@ -150,14 +150,14 @@ impl ConfigData {
         Ok(())
     }
 
-    pub fn get_first_so(&self) -> Option<ConfigAccount> {
-        for a in &self.accounts {
-            if a.hoster == ConfigHoster::ShareOnline {
-                return Some(a.clone());
+    pub fn get_account(&self, hoster: ConfigHoster, status: ConfigAccountStatus) -> Result<ConfigAccount> {
+        for acc in &self.accounts {
+            if acc.hoster == hoster && acc.status == status {
+                return Ok(acc.clone());
             }
         }
 
-        None
+        bail!("No account available with this information");
     }
 }
 

@@ -165,20 +165,15 @@ impl ShareOnline {
 
     /// Share-Online premium login
     fn login(&self) -> Result<(String, String)> {
-        let so_cfg = self
-            .config
-            .get()
-            .get_first_so()
-            .ok_or("No share-online logins defined")?
-            .clone();
-
-        let usr = so_cfg.username;
-        let pwd = so_cfg.password;
+        let acc = self.config.get().get_account(
+            ::config::ConfigHoster::ShareOnline,
+            ::config::ConfigAccountStatus::Premium,
+        )?;
 
         // download the user data
         let login_url = format!(
             "https://api.share-online.biz/account.php?username={}&password={}&act=userDetails",
-            usr, pwd
+            acc.username, acc.password
         );
         let mut resp = reqwest::get(&login_url)?;
 
@@ -209,20 +204,15 @@ impl ShareOnline {
 
     /// Get the premium download url
     fn get_dload_url(&self, file: &DownloadFile) -> Result<String> {
-        let so_cfg = self
-            .config
-            .get()
-            .get_first_so()
-            .ok_or("No share-online logins defined")?
-            .clone();
-
-        let usr = so_cfg.username;
-        let pwd = so_cfg.password;
+        let acc = self.config.get().get_account(
+            ::config::ConfigHoster::ShareOnline,
+            ::config::ConfigAccountStatus::Premium,
+        )?;
 
         // make the request call
         let info_url = format!(
             "https://api.share-online.biz/account.php?username={}&password={}&act=download&lid={}",
-            usr, pwd, file.file_id
+            acc.username, acc.password, file.file_id
         );
         let mut resp = reqwest::get(&info_url)?;
 
