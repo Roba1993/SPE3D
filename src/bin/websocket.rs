@@ -2,8 +2,6 @@ use std::thread;
 use Config;
 use ws;
 use spe3d::DownloadManager;
-use ::Result;
-
 
 //type Result<T, E = ::failure::Error> = Result<T, E>;
 
@@ -36,7 +34,7 @@ pub fn start_ws(config: &Config, dm: &DownloadManager) {
     });
 }
 
-fn handle_updates(sender: &ws::Sender, dm: &DownloadManager) -> Result<()> {
+fn handle_updates(sender: &ws::Sender, dm: &DownloadManager) -> Result<(), ::spe3d::error::Error> {
     let msg = ::serde_json::to_string(&dm.recv_update().unwrap())?;
 
     //me.listen(host).unwrap();
