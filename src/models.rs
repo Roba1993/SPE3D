@@ -4,10 +4,11 @@ use error::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use dlc_decrypter::DlcPackage;
 use std::sync::{Arc, RwLock, Mutex};
-use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::mpsc::{Sender, Receiver};
 use std::fs::File;
 use std::io::prelude::*;
-
+use bus::{MessageBus, Message};
+use std::thread;
 
 
 // counter for the unique id's of the download packages
@@ -26,7 +27,7 @@ pub fn set_idcounter(id: usize) {
 
 /// Data model for a single download container, which can hold
 /// multiple download links. 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DownloadPackage {
     id: usize,
     pub name: String,
@@ -63,7 +64,7 @@ impl From<DlcPackage> for DownloadPackage {
 
 
 /// Data model for a single link/file which can be downloaded.
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DownloadFile {
     id: usize,
     pub status: FileStatus,
@@ -165,7 +166,7 @@ impl Default for FileHash {
 
 /// A temporary list of all `DownloadPackage`s
 /// This is the format mostly returned by the `DownloadManager`
-type DownloadList = Vec<DownloadPackage>;
+pub type DownloadList = Vec<DownloadPackage>;
 
 
 
@@ -177,14 +178,14 @@ type DownloadList = Vec<DownloadPackage>;
 #[derive(Clone)]
 pub struct SmartDownloadList {
     downloads: Arc<RwLock<DownloadList>>,
-    sender: Arc<Mutex<Sender<DownloadList>>>,
-    receiver: Arc<Mutex<Receiver<DownloadList>>>,
+    sender: Arc<Mutex<Sender<Message>>>,
+    receiver: Arc<Mutex<Receiver<Message>>>,
 }
 
 impl SmartDownloadList {
     /// Create a new Download Manager
-    pub fn new() -> SmartDownloadList {
-        let (sender, receiver) = channel();
+    pub fn new(bus: &MessageBus) -> Result<SmartDownloadList> {
+        let (sender, receiver) = bus.channel()?;
 
         // create the download list
         let d_list = SmartDownloadList {
@@ -199,8 +200,18 @@ impl SmartDownloadList {
             Err(_) => {println!("Can't read previus status of the download list")}
         };
 
+        // a clone from the msg bus for the internal handler
+        let d_list_internal = d_list.clone();
+        // new thread for the bus handler
+        thread::spawn(move || loop {
+            match d_list_internal.handle_msg() {
+                Ok(_) => {}
+                Err(e) => println!("{}", e),
+            }
+        });
+
         // return the download list
-        d_list
+        Ok(d_list)
     }
 
     /// Set's the status of an package and all it's childs or a single file by the given id
@@ -231,6 +242,10 @@ impl SmartDownloadList {
         self.save()
     }
 
+    /// Add the size of data which is additionally downloaded.
+    /// This function does not trigger an message to the bus.
+    /// This function is autmatically triggered by the corresponding
+    /// bus message
     pub fn add_downloaded(&self, id: usize, size: usize) -> Result<()> {
         self.downloads.write()?.iter_mut().for_each(|pck| 
             if let Some(i) = pck.files.iter_mut().find(|f| f.id() == id) { 
@@ -239,7 +254,6 @@ impl SmartDownloadList {
             }
         );
 
-        self.publish_update()?;
         Ok(())
     }
 
@@ -340,14 +354,17 @@ impl SmartDownloadList {
     /// This update can be automatically received by the function `recv_update()`
     pub fn publish_update(&self) -> Result<()> {
         // get the download list and send it into the channel
-        self.sender.lock()?.send(self.get_downloads()?)?;
+        self.sender.lock()?.send(Message::DownloadList(self.get_downloads()?))?;
         Ok(())
     }
 
-    /// This is a blocking function, which returns a new `DownloadList` on
-    /// every change happening to the `SmartDownloadList`
-    pub fn recv_update(&self) -> Result<DownloadList> {
-        Ok(self.receiver.lock()?.recv()?)
+    /// handles incoming update speed messages
+    fn handle_msg(&self) -> Result<()> {
+        if let Message::DownloadSpeed((id, size)) = self.receiver.lock()?.recv()? {
+            self.add_downloaded(id, size)?;
+        }
+
+        Ok(())
     }
 
     fn save(&self) -> Result<()> {
@@ -378,10 +395,4 @@ impl SmartDownloadList {
 
         Ok(())
     }
-}
-
-impl Default for SmartDownloadList {
-    fn default() -> Self {
-        Self::new()
-    }  
 }

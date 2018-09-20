@@ -15,6 +15,16 @@ export default class DloadStore {
         return this.dloads.find(c => c.id == id);
     }
 
+    getFile(id) {
+        for(var i of this.dloads) {
+            for(var j of i.files) {
+                if(j.id == id) {
+                    return j;
+                }
+            }
+        }
+    }
+
     startDload(id) {
         if (!id) {
             return;
@@ -83,7 +93,17 @@ export default class DloadStore {
     websocket() {
         var websocket = new WebSocket('ws://' + window.location.hostname + ':8000/updates');
         websocket.onmessage = (evt) => {
-            this.replaceDloads(JSON.parse(evt.data))
+            var msg = JSON.parse(evt.data);
+            //console.log(msg);
+            
+            if(msg.DownloadList != undefined) {
+                this.replaceDloads(msg.DownloadList);
+            }
+            else if(msg.DownloadSpeed != undefined) {
+                var file = this.getFile(msg.DownloadSpeed[0]);
+                file.downloaded += msg.DownloadSpeed[1];
+                file.speed = msg.DownloadSpeed[1];
+            }
         }
     }
 }

@@ -8,13 +8,13 @@ use models::{DownloadFile, FileStatus, SmartDownloadList};
 use self::so::ShareOnline;
 use config::Config;
 use std::thread;
-use std::sync::mpsc::{Sender, Receiver, channel};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use std::io::Read;
 use md5::{Md5, Digest};
 use std::fs::File;
 use std::io::Write;
 use std::time::{Duration, Instant};
+use bus::{MessageBus, Message};
 
 
 /// This `Loader` defines which funtionalities are used to download a file from a source
@@ -40,23 +40,23 @@ pub trait Loader {
 /// The `Downloader` manages the actual downloads of files throgh different loader implementations.
 #[derive(Clone)]
 pub struct Downloader {
-    config: Arc<Config>,
-    d_list: Arc<SmartDownloadList>,
-    d_updater: Arc<DownloadUpdater>,
+    config: Config,
+    d_list: SmartDownloadList,
+    bus: MessageBus,
     loader: Arc<Vec<Box<Loader+Sync+Send>>>
 }
 
 impl Downloader {
     /// Create a new Downloader
-    pub fn new(config: Config, d_list: SmartDownloadList) -> Downloader {
+    pub fn new(config: Config, d_list: SmartDownloadList, bus: MessageBus) -> Downloader {
         let loader = Arc::new(vec!(
             Box::new(ShareOnline::new(config.clone())) as Box<Loader+Sync+Send>,
         ));
 
          Downloader {
-            config: Arc::new(config),
-            d_list: Arc::new(d_list.clone()),
-            d_updater: Arc::new(DownloadUpdater::new(d_list)),
+            config,
+            d_list,
+            bus,
             loader
         }
     }
@@ -128,7 +128,7 @@ impl Downloader {
         self.d_list.set_downloaded(f_info.id(), 0)?;
 
         ::std::fs::create_dir_all(format!("./out/{}", pck.name))?;
-        let hash = stream.write_to_file(path.clone(), &f_info.id(), self.d_updater.get_sender()?)?;
+        let hash = stream.write_to_file(path.clone(), f_info.id(), &self.bus)?;
         println!("HASH FROM DLOAD: {}", hash);
 
         // set the downloaded attribute to the size, because all is downloaded and set speed to 0
@@ -148,70 +148,15 @@ impl Downloader {
 }
 
 
-
-
-
-
-/// The download updater receives the actual download speed and volume for each file
-/// and reports this back to the `DownloadList`.
-#[derive(Clone)]
-pub struct DownloadUpdater {
-    sender: Arc<Mutex<Sender<(usize, usize)>>>,
-    d_list: SmartDownloadList,
-}
-
-impl DownloadUpdater {
-    /// Create a new download updater
-    pub fn new(d_list: SmartDownloadList) -> DownloadUpdater {
-        let (sender, receiver) = channel();
-
-        let updater = DownloadUpdater {
-            sender: Arc::new(Mutex::new(sender)),
-            d_list,
-        };
-
-        updater.run(receiver);
-
-        updater
-    }
-
-    /// Get a sender to send messages/updates to the downlaod updater.
-    /// The Sender needs the following data (id, data last second)
-    pub fn get_sender(&self) -> Result<Sender<(usize, usize)>> {
-        Ok(self.sender.lock()?.clone())
-    }
-
-    /// Start the download updater (spawns a thread)
-    fn run(&self, receiver: Receiver<(usize, usize)>) {
-        let this = self.clone();
-
-        // new thread for the download
-        thread::spawn(move || {
-            loop {
-                match this.handle_update(&receiver) {
-                    Ok(_) => {},
-                    Err(e) => {println!("{}", e)}
-                }
-            }
-        });
-    }
-
-    /// Internal function to handle the incomingmessages
-    fn handle_update(&self, receiver: &Receiver<(usize, usize)>) -> Result<()> {
-        let (id, size) = receiver.recv()?;
-        self.d_list.add_downloaded(id, size)
-    }
-}
-
-
-
-
 /// Trait to write a stream of data to a file.
 pub trait FileWriter : Read {
     /// Function to write a stream of data, to a file
     /// based on the std::io::Read trait. This functions
     /// returns as result the hash of the written file.
-    fn write_to_file<S: Into<String>>(&mut self, file: S, id: &usize, sender: Sender<(usize, usize)>) -> Result<String> {
+    fn write_to_file<S: Into<String>>(&mut self, file: S, id: usize, bus: &MessageBus) -> Result<String> {
+        // get the sender
+        let sender = bus.get_sender()?;
+
         // define the buffer
         let mut buffer = [0u8; 4096];
         let mut start = Instant::now();
@@ -240,7 +185,7 @@ pub trait FileWriter : Read {
 
             // update the status
             if start.elapsed() > Duration::from_secs(1) {
-                sender.send((*id, speed))?;
+                sender.send(Message::DownloadSpeed((id, speed)))?;
                 speed = 0;
                 start = Instant::now();
             }

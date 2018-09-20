@@ -22,6 +22,7 @@ pub mod config;
 pub mod error;
 pub mod loader;
 pub mod models;
+pub mod bus;
 
 // reexports for easier use of the important structures
 pub use config::Config;
@@ -33,12 +34,14 @@ use error_chain::ChainedError;
 use loader::Downloader;
 use models::{DownloadPackage, FileStatus, SmartDownloadList};
 use std::thread;
+use bus::MessageBus;
 
 /// Main entry point for the API. This structure allows to add potential downloads
 /// to a shared list and gives the ability to start this downloads.
 #[derive(Clone)]
 pub struct DownloadManager {
     config: Config,
+    bus: MessageBus,
     d_list: SmartDownloadList,
     downloader: Downloader,
 }
@@ -46,12 +49,14 @@ pub struct DownloadManager {
 impl DownloadManager {
     /// Create a new Download Manager based on a configuration
     pub fn new(config: Config) -> Result<DownloadManager> {
-        let d_list = SmartDownloadList::new();
+        let bus = MessageBus::new();
+        let d_list = SmartDownloadList::new(&bus)?;
 
         Ok(DownloadManager {
             config: config.clone(),
+            bus: bus.clone(),
             d_list: d_list.clone(),
-            downloader: Downloader::new(config, d_list),
+            downloader: Downloader::new(config, d_list, bus),
         })
     }
 
@@ -132,8 +137,8 @@ impl DownloadManager {
     }
 
     /// Receive a new download list on each change
-    pub fn recv_update(&self) -> Result<Vec<DownloadPackage>> {
-        self.d_list.recv_update()
+    pub fn get_bus(&self) -> MessageBus {
+        self.bus.clone()
     }
 
     /// Get the actual configuration

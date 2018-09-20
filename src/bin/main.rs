@@ -20,6 +20,7 @@ use std::sync::{
 };
 use warp::ws::{Message, WebSocket};
 use warp::Filter;
+use std::sync::mpsc::Receiver;
 
 fn main() {
     // load the config file
@@ -35,7 +36,7 @@ fn main() {
     // Keep track of all connected users, key is usize, value
     // is a websocket sender.
     let users = Arc::new(Mutex::new(HashMap::new()));
-    handle_dm_updates(&dm, &users);
+    handle_dm_updates(&dm, &users).unwrap();
     let users = warp::any().map(move || users.clone());
 
 
@@ -362,19 +363,22 @@ fn ws_user_connected(
         })
 }
 
-pub fn handle_dm_updates(dm: &DownloadManager, users: &Users) {
+pub fn handle_dm_updates(dm: &DownloadManager, users: &Users) -> Result<(), ::spe3d::error::Error> {
     let dm = dm.clone();
     let users = users.clone();
+    let (_, receiver) = dm.get_bus().channel()?;
 
     ::std::thread::spawn(move || loop {
-        if let Err(e) = handle_updates(&users, &dm) {
+        if let Err(e) = internal_handle_updates(&users, &receiver) {
             println!("{}", e.to_string());
         }
     });
+
+    Ok(())
 }
 
-fn handle_updates(users: &Users, dm: &DownloadManager) -> Result<(), ::spe3d::error::Error> {
-    let msg = ::serde_json::to_string(&dm.recv_update()?)?;
+fn internal_handle_updates(users: &Users, recv: &Receiver<::spe3d::bus::Message>) -> Result<(), ::spe3d::error::Error> {
+    let msg = ::serde_json::to_string(&recv.recv()?)?;
 
     for (_, tx) in users.lock().unwrap().iter_mut() {
         let _ = tx.start_send(Message::text(msg.clone()));

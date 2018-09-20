@@ -1,0 +1,76 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+
+GET /fl?fr=C64455E9C6212ABDE11528EDC04550BFC62928E5E149298C92415D0994202AEDE9FA2E7B1749A81D920D52ECAFEC760BA94479429810BAEC94F628EC3B3D71A59445162436054BEC309E7901BFF8001094C3480312487705B3B73BEC45C9F06B2F042980020BB31D948DA9C286AF30D3&q=v4 HTTP/1.1
+Host: dlw302-2.share-online.biz
+Connection: keep-alive
+Pragma: no-cache
+Cache-Control: no-cache
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.81 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+Referer: http://www.share-online.biz/dl/NPE1KXEPFQM/free/
+Accept-Encoding: gzip, deflate
+Accept-Language: de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7
+Cookie: __cfduid=d8dced2ec8543499ac9ff33b6c4c3fa9a1510559340; _ga=GA1.2.622616097.1510559341; sosid=65scli1povp22t6du3pcs958g3; animations=1; newsscrl=1; page_language=german; _gid=GA1.2.739128181.1537373468; q=aJVfx8JtcgIwhKI129pol; _gat=1
+
+
+GET /fl?fr=C64455E9C6212ABDE11528EDC04550BFC02928B9E149288C92415D9394202AEDE9B72E203C49840B92E37FEC9CE82585B94479939C10AFEC945028EC2A4A5A7B94458334EB2C5BECE76E7F0B8FB055EB942C726E6C147CD182B629ECF792BC1888C7285ABA690AC094A0445BE6F97BC9&q=v4 HTTP/1.1
+Host: dlw302-2.share-online.biz
+Connection: keep-alive
+Pragma: no-cache
+Cache-Control: no-cache
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.81 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+Referer: http://www.share-online.biz/dl/NPE1KXEPFQM/free/
+Accept-Encoding: gzip, deflate
+Accept-Language: de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7
+Cookie: __cfduid=d8dced2ec8543499ac9ff33b6c4c3fa9a1510559340; _ga=GA1.2.622616097.1510559341; sosid=65scli1povp22t6du3pcs958g3; animations=1; newsscrl=1; page_language=german; _gid=GA1.2.739128181.1537373468; q=aJVfx8JtcgIwhKI129pol
