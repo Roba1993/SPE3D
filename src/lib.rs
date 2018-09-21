@@ -1,4 +1,4 @@
-#![recursion_limit="128"]
+#![recursion_limit = "128"]
 
 //! This create provides the functionality of a download manager as a crate functionality.
 //!
@@ -10,31 +10,31 @@ extern crate error_chain;
 #[macro_use]
 extern crate serde_derive;
 extern crate dlc_decrypter;
+extern crate jd_decrypter;
 extern crate md5;
 extern crate regex;
 extern crate reqwest;
 extern crate serde;
 extern crate serde_json;
 extern crate toml;
-extern crate jd_decrypter;
 
+pub mod bus;
 pub mod config;
 pub mod error;
 pub mod loader;
 pub mod models;
-pub mod bus;
 
 // reexports for easier use of the important structures
 pub use config::Config;
 
 // Imports for the Download Manager
+use bus::MessageBus;
 use dlc_decrypter::DlcDecoder;
 use error::*;
 use error_chain::ChainedError;
 use loader::Downloader;
 use models::{DownloadPackage, FileStatus, SmartDownloadList};
 use std::thread;
-use bus::MessageBus;
 
 /// Main entry point for the API. This structure allows to add potential downloads
 /// to a shared list and gives the ability to start this downloads.
@@ -162,26 +162,25 @@ impl DownloadManager {
     /********************* Private Functions *****************/
     /// The internal loop which runs all 0.2 seconds
     fn internal_loop(&self) -> Result<()> {
-        // get all download id's in queue to start
-        let qeue = self.d_list.files_status(FileStatus::DownloadQueue)?;
+        // get all id's in queue which are downloading right now
         let dloads = self.d_list.files_status(FileStatus::Downloading)?;
 
-        // start a new download if its available
-        if dloads.len() < 3 && !qeue.is_empty() {
-            self.downloader
-                .download(qeue.get(0).ok_or("Id is not available anymore")?.clone());
+        // when less than 3 downloads happen and a new download id is available
+        if dloads.len() < 3 {
+            if let Ok(id) = self.downloader.get_next_download() {
+                self.downloader.download(id);
+            }
         }
 
         // check always one account - each account every 5 minutes
-        // on error also check the account
+        // on time error also check the account
         for acc in self.config.get().accounts {
             if let Ok(e) = acc.checked.elapsed() {
                 if e > ::std::time::Duration::from_secs(300) {
                     self.check_account(acc.id)?;
                     break;
                 }
-            }
-            else {
+            } else {
                 self.check_account(acc.id)?;
                 break;
             }

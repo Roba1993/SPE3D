@@ -7,17 +7,16 @@ use config::Config;
 use error::*;
 use loader::Loader;
 use md5::{Digest, Md5};
-use models::{DownloadFile, FileHash, FileHoster, FileStatus};
+use models::{DownloadFile, FileHash, FileHoster, FileStatus, SmartDownloadList};
 use regex::Regex;
 use reqwest;
 use std::fs::File;
 
 /// Share-Online downloader struct which allows to download files from share-online with an premium account.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ShareOnline {
     config: Config,
-    expire_date: String,
-    key: String,
+    d_list: SmartDownloadList,
 }
 
 impl Loader for ShareOnline {
@@ -151,15 +150,42 @@ impl Loader for ShareOnline {
 
         bail!("Download is incorrect, hash is not matching");
     }
+
+    /// Get the next ShareOnline file download id to continue with
+    fn get_next_download(&self) -> Result<usize> {
+        let qeue = self.d_list.files_status_hoster(FileStatus::DownloadQueue, FileHoster::ShareOnline)?;
+        
+        // check for share-online premium account
+        match self.config.get().get_account(
+            ::config::ConfigHoster::ShareOnline,
+            ::config::ConfigAccountStatus::Premium,
+        ) {
+            Ok(_) => {
+                // return a new id when a download id exists
+                if !qeue.is_empty() {
+                    return Ok(qeue.get(0).ok_or("Id is not available anymore")?.clone());
+                }
+            }
+            Err(_) => {
+                let dloads = self.d_list.files_status_hoster(FileStatus::Downloading, FileHoster::ShareOnline)?;
+
+                // start a new free download when nothing is downloaded from so right now
+                if dloads.len() == 0 && !qeue.is_empty() {
+                    return Ok(qeue.get(0).ok_or("Id is not available anymore")?.clone());
+                }
+            },
+        }
+
+        bail!("No download id availablr for this hoster");
+    }
 }
 
 impl ShareOnline {
     /// Create a new Share-Online downlaoder
-    pub fn new(config: Config) -> ShareOnline {
+    pub fn new(config: Config, d_list: SmartDownloadList) -> ShareOnline {
         ShareOnline {
             config,
-            expire_date: "".into(),
-            key: "".into(),
+            d_list,
         }
     }
 
@@ -228,7 +254,8 @@ impl ShareOnline {
         if &Regex::new(r"STATUS: ([^\s]+)")?
             .find(&body)
             .ok_or("No status available")?
-            .as_str()[8..] != "online"
+            .as_str()[8..]
+            != "online"
         {
             bail!("The file is not online anymore");
         }
@@ -237,7 +264,8 @@ impl ShareOnline {
         if Regex::new(r"MD5: ([^\s]+)")?
             .find(&body)
             .ok_or("No md5 available")?
-            .as_str()[5..] != file.hash.md5().ok_or("FileInfo has no hash")?
+            .as_str()[5..]
+            != file.hash.md5().ok_or("FileInfo has no hash")?
         {
             bail!("The Hash of the file to download don't match anymore")
         }

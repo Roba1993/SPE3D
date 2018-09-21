@@ -30,6 +30,9 @@ pub trait Loader {
 
     /// Prove that the downloaded file is correct
     fn prove_download(&self, file: &DownloadFile, path: &str) -> Result<bool>;
+
+    /// Get the next file download id to continue the download with
+    fn get_next_download(&self) -> Result<usize>;
 }
 
 
@@ -50,7 +53,7 @@ impl Downloader {
     /// Create a new Downloader
     pub fn new(config: Config, d_list: SmartDownloadList, bus: MessageBus) -> Downloader {
         let loader = Arc::new(vec!(
-            Box::new(ShareOnline::new(config.clone())) as Box<Loader+Sync+Send>,
+            Box::new(ShareOnline::new(config.clone(), d_list.clone())) as Box<Loader+Sync+Send>,
         ));
 
          Downloader {
@@ -84,6 +87,17 @@ impl Downloader {
         }
 
         Err(Error::from("Can't identify file info"))
+    }
+
+    /// Get the id of the next download, or an error
+    pub fn get_next_download(&self) -> Result<usize> {
+        for l in self.loader.iter() {
+            if let Ok(id) = l.get_next_download() {
+                return Ok(id)
+            }
+        }
+
+        bail!("No next download available");
     }
 
     /// Update and complete the account data
@@ -129,7 +143,6 @@ impl Downloader {
 
         ::std::fs::create_dir_all(format!("./out/{}", pck.name))?;
         let hash = stream.write_to_file(path.clone(), f_info.id(), &self.bus)?;
-        println!("HASH FROM DLOAD: {}", hash);
 
         // set the downloaded attribute to the size, because all is downloaded and set speed to 0
         self.d_list.add_downloaded(f_info.id(), 0)?;
@@ -146,6 +159,8 @@ impl Downloader {
         Ok(())
     }
 }
+
+
 
 
 /// Trait to write a stream of data to a file.

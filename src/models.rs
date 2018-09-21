@@ -304,6 +304,19 @@ impl SmartDownloadList {
         Ok(ids)
     }
 
+    /// Gives a list of the files with the status back
+    pub fn files_status_hoster(&self, status: FileStatus, hoster: FileHoster) -> Result<Vec<usize>> {
+        // get all download id's in queue to start
+        let ids = self.downloads.read()?.iter().map(|pck|
+                pck.files.iter()
+                .filter(|i| i.status == status && i.hoster == hoster)
+                .map(|i| i.id()).collect::<Vec<usize>>()
+            ).flat_map(|i| i.into_iter())
+            .collect::<Vec<usize>>();
+
+        Ok(ids)
+    }
+
     /// Returns a copy of the file info
     pub fn get_file(&self, id: &usize) -> Result<DownloadFile> {
         let file = self.downloads.read()?.iter()
