@@ -53,7 +53,7 @@ impl Downloader {
     /// Create a new Downloader
     pub fn new(config: Config, d_list: SmartDownloadList, bus: MessageBus) -> Downloader {
         let loader = Arc::new(vec!(
-            Box::new(ShareOnline::new(config.clone(), d_list.clone())) as Box<Loader+Sync+Send>,
+            Box::new(ShareOnline::new(config.clone(), d_list.clone(), bus.clone())) as Box<Loader+Sync+Send>,
         ));
 
          Downloader {
@@ -70,7 +70,9 @@ impl Downloader {
 
         // new thread for the download
         thread::spawn(move || {
-            this.internal_download(id).unwrap();
+            if let Err(e) = this.internal_download(id) {
+                this.d_list.set_status(id, &FileStatus::Unknown).unwrap();
+            }
         });
     }
 

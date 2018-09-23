@@ -1,16 +1,19 @@
 {
-    "name": "Getting Started Example",
-    "version": "1.0",
-    "description": "Build an Extension!",
+    "name": "SPE3D",
+    "version": "0.1",
+    "description": "Captchar solver and status view for SPE3D Download Manager",
     "manifest_version": 2,
-    "content_scripts": [
-        {
-            "matches": [
-                "http://www.share-online.biz/*"
-            ],
-            "js": [
-                "contentScript.js"
-            ]
-        }
-    ]
+    "permissions": [
+        "activeTab",
+        "notifications",
+        "storage",
+        "http://*/",
+        "https://*/"
+    ],
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": false
+    }
 }

@@ -1,10 +1,10 @@
+extern crate base64;
 extern crate bytes;
 extern crate futures;
 extern crate serde;
 extern crate serde_json;
 extern crate spe3d;
 extern crate warp;
-extern crate base64;
 
 use spe3d::config::Config;
 use spe3d::DownloadManager;
@@ -14,13 +14,13 @@ use futures::stream::SplitSink;
 use futures::{Future, Sink, Stream};
 use std::collections::HashMap;
 use std::io::Read;
+use std::sync::mpsc::Receiver;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
 use warp::ws::{Message, WebSocket};
 use warp::Filter;
-use std::sync::mpsc::Receiver;
 
 fn main() {
     // load the config file
@@ -38,7 +38,6 @@ fn main() {
     let users = Arc::new(Mutex::new(HashMap::new()));
     handle_dm_updates(&dm, &users).unwrap();
     let users = warp::any().map(move || users.clone());
-
 
     // warp webserver code
     let dmw = dm.clone();
@@ -74,8 +73,7 @@ fn main() {
             api.and(warp::path("start-download"))
                 .and(warp::path::param::<usize>())
                 .and(warp::path::index()),
-        )
-        .and(dmw.clone())
+        ).and(dmw.clone())
         .and_then(post_start_download)
         .with(warp::reply::with::header(
             "Access-Control-Allow-Origin",
@@ -97,8 +95,7 @@ fn main() {
             api.and(warp::path("delete-link"))
                 .and(warp::path::param::<usize>())
                 .and(warp::path::index()),
-        )
-        .and(dmw.clone())
+        ).and(dmw.clone())
         .and_then(post_delete_link)
         .with(warp::reply::with::header(
             "Access-Control-Allow-Origin",
@@ -129,8 +126,7 @@ fn main() {
             api.and(warp::path("config"))
                 .and(warp::path("server"))
                 .and(warp::path::index()),
-        )
-        .and(dmw.clone())
+        ).and(dmw.clone())
         .and(warp::body::json())
         .and_then(post_config_server)
         .with(warp::reply::with::header(
@@ -143,8 +139,7 @@ fn main() {
             api.and(warp::path("config"))
                 .and(warp::path("account"))
                 .and(warp::path::index()),
-        )
-        .and(dmw.clone())
+        ).and(dmw.clone())
         .and(warp::body::json())
         .and_then(post_config_account)
         .with(warp::reply::with::header(
@@ -158,8 +153,7 @@ fn main() {
                 .and(warp::path("account"))
                 .and(warp::path::param::<usize>())
                 .and(warp::path::index()),
-        )
-        .and(dmw.clone())
+        ).and(dmw.clone())
         .and_then(delete_config_account)
         .with(warp::reply::with::header(
             "Access-Control-Allow-Origin",
@@ -171,8 +165,7 @@ fn main() {
         .with(warp::reply::with::header(
             "Access-Control-Allow-Origin",
             "*",
-        ))
-        .with(warp::reply::with::header(
+        )).with(warp::reply::with::header(
             "Access-Control-Allow-Headers",
             "*",
         ));
@@ -182,6 +175,18 @@ fn main() {
         .and(dmw.clone())
         .and(warp::body::concat())
         .and_then(post_add_ejs)
+        .with(warp::reply::with::header(
+            "Access-Control-Allow-Origin",
+            "*",
+        ));
+
+    let post_captcha_result = warp::post2()
+        .and(
+            api.and(warp::path("captcha-result"))
+                .and(warp::path::index()),
+        ).and(dmw.clone())
+        .and(warp::body::json())
+        .and_then(post_captcha_result)
         .with(warp::reply::with::header(
             "Access-Control-Allow-Origin",
             "*",
@@ -211,6 +216,7 @@ fn main() {
         .or(post_config_account)
         .or(delete_config_account)
         .or(post_add_ejs)
+        .or(post_captcha_result)
         .or(ws_updates)
         .or(options);
 
@@ -312,7 +318,17 @@ fn post_add_ejs(
 
     let s = s.replacen("data:application/octet-stream;base64,", "", 1);
 
-    dm.get_config().parse_jd_accounts(&::base64::decode(&s).unwrap()).unwrap();
+    dm.get_config()
+        .parse_jd_accounts(&::base64::decode(&s).unwrap())
+        .unwrap();
+    Ok("")
+}
+
+fn post_captcha_result(
+    dm: DownloadManager,
+    json: ::spe3d::models::CaptchaResult,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    dm.add_captcha_result(json).unwrap();
     Ok("")
 }
 
@@ -326,10 +342,7 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 /// - Value is a sender of `warp::ws::Message`s
 type Users = Arc<Mutex<HashMap<usize, SplitSink<WebSocket>>>>;
 
-fn ws_user_connected(
-    ws: WebSocket,
-    users: Users,
-) -> impl Future<Item = (), Error = ()> {
+fn ws_user_connected(ws: WebSocket, users: Users) -> impl Future<Item = (), Error = ()> {
     // Use a counter to assign a new unique ID for this user.
     let my_id = NEXT_USER_ID.fetch_add(1, Ordering::Relaxed);
 
@@ -377,7 +390,10 @@ pub fn handle_dm_updates(dm: &DownloadManager, users: &Users) -> Result<(), ::sp
     Ok(())
 }
 
-fn internal_handle_updates(users: &Users, recv: &Receiver<::spe3d::bus::Message>) -> Result<(), ::spe3d::error::Error> {
+fn internal_handle_updates(
+    users: &Users,
+    recv: &Receiver<::spe3d::bus::Message>,
+) -> Result<(), ::spe3d::error::Error> {
     let msg = ::serde_json::to_string(&recv.recv()?)?;
 
     for (_, tx) in users.lock().unwrap().iter_mut() {

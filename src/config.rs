@@ -129,13 +129,13 @@ impl ConfigData {
         let mut accounts = vec![];
 
         // get account config
-        if let Some(so) = tml["share_online"].as_array() {
+        if let Some(so) = tml.as_table().and_then(|t| t.get("share_online").and_then(|s| s.as_array())) {
             for s in so {
                 accounts.push(ConfigAccount {
                     id: IDCOUNTER.fetch_add(1, Ordering::SeqCst),
                     hoster: ConfigHoster::ShareOnline,
-                    username: s["username"].as_str().unwrap_or("").to_string(),
-                    password: s["password"].as_str().unwrap_or("").to_string(),
+                    username: s.as_table().and_then(|t| t.get("username").and_then(|s| s.as_str())).unwrap_or("").to_string(),
+                    password: s.as_table().and_then(|t| t.get("password").and_then(|s| s.as_str())).unwrap_or("").to_string(),
                     status: ConfigAccountStatus::Unknown,
                     checked: ::std::time::SystemTime::now(),
                 });

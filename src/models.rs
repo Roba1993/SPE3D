@@ -164,6 +164,20 @@ impl Default for FileHash {
 
 
 
+/// CaptchaResult structure to receive from captcha
+/// solving plugin
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct CaptchaResult {
+    pub id: usize,
+    pub file_id: String,
+    pub hoster: String,
+    pub url: String
+}
+
+
+
+
+
 /// A temporary list of all `DownloadPackage`s
 /// This is the format mostly returned by the `DownloadManager`
 pub type DownloadList = Vec<DownloadPackage>;

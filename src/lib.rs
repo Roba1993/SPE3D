@@ -33,7 +33,7 @@ use dlc_decrypter::DlcDecoder;
 use error::*;
 use error_chain::ChainedError;
 use loader::Downloader;
-use models::{DownloadPackage, FileStatus, SmartDownloadList};
+use models::{DownloadPackage, FileStatus, SmartDownloadList, CaptchaResult};
 use std::thread;
 
 /// Main entry point for the API. This structure allows to add potential downloads
@@ -157,6 +157,13 @@ impl DownloadManager {
         }
 
         bail!("No account found with the given id");
+    }
+
+    /// Add an captcha result to the download manager
+    pub fn add_captcha_result(&self, cr: CaptchaResult) -> Result<()> {
+        let sender = self.bus.get_sender()?;
+        sender.send(::bus::Message::CaptchaResponse(cr))?;
+        Ok(())
     }
 
     /********************* Private Functions *****************/

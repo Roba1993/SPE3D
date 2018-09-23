@@ -3,6 +3,7 @@
 //!
 //! Right now only Premium Accounts are supported.
 
+use bus::{Message, MessageBus};
 use config::Config;
 use error::*;
 use loader::Loader;
@@ -17,6 +18,7 @@ use std::fs::File;
 pub struct ShareOnline {
     config: Config,
     d_list: SmartDownloadList,
+    bus: MessageBus,
 }
 
 impl Loader for ShareOnline {
@@ -107,7 +109,17 @@ impl Loader for ShareOnline {
 
     /// Download a file, with this laoder
     fn download(&self, file: &DownloadFile) -> Result<::reqwest::Response> {
-        let (key, expire_date) = self.login()?;
+        let acc = match self.config.get().get_account(
+            ::config::ConfigHoster::ShareOnline,
+            ::config::ConfigAccountStatus::Premium,
+        ) {
+            Ok(a) => a,
+            Err(_) => {
+                return self.free_download(file);
+            }
+        };
+
+        let (key, expire_date) = self.login(acc)?;
         let url = self.get_dload_url(file)?;
 
         // set the download header
@@ -153,8 +165,10 @@ impl Loader for ShareOnline {
 
     /// Get the next ShareOnline file download id to continue with
     fn get_next_download(&self) -> Result<usize> {
-        let qeue = self.d_list.files_status_hoster(FileStatus::DownloadQueue, FileHoster::ShareOnline)?;
-        
+        let qeue = self
+            .d_list
+            .files_status_hoster(FileStatus::DownloadQueue, FileHoster::ShareOnline)?;
+
         // check for share-online premium account
         match self.config.get().get_account(
             ::config::ConfigHoster::ShareOnline,
@@ -167,13 +181,15 @@ impl Loader for ShareOnline {
                 }
             }
             Err(_) => {
-                let dloads = self.d_list.files_status_hoster(FileStatus::Downloading, FileHoster::ShareOnline)?;
+                let dloads = self
+                    .d_list
+                    .files_status_hoster(FileStatus::Downloading, FileHoster::ShareOnline)?;
 
                 // start a new free download when nothing is downloaded from so right now
                 if dloads.len() == 0 && !qeue.is_empty() {
                     return Ok(qeue.get(0).ok_or("Id is not available anymore")?.clone());
                 }
-            },
+            }
         }
 
         bail!("No download id availablr for this hoster");
@@ -182,20 +198,16 @@ impl Loader for ShareOnline {
 
 impl ShareOnline {
     /// Create a new Share-Online downlaoder
-    pub fn new(config: Config, d_list: SmartDownloadList) -> ShareOnline {
+    pub fn new(config: Config, d_list: SmartDownloadList, bus: MessageBus) -> ShareOnline {
         ShareOnline {
             config,
             d_list,
+            bus,
         }
     }
 
     /// Share-Online premium login
-    fn login(&self) -> Result<(String, String)> {
-        let acc = self.config.get().get_account(
-            ::config::ConfigHoster::ShareOnline,
-            ::config::ConfigAccountStatus::Premium,
-        )?;
-
+    fn login(&self, acc: ::config::ConfigAccount) -> Result<(String, String)> {
         // download the user data
         let login_url = format!(
             "https://api.share-online.biz/account.php?username={}&password={}&act=userDetails",
@@ -277,5 +289,56 @@ impl ShareOnline {
                 .ok_or("No url available")?
                 .as_str()[5..],
         ))
+    }
+
+    /// Try to get a free download
+    fn free_download(&self, file: &DownloadFile) -> Result<::reqwest::Response> {
+        let (sender, receiver) = self.bus.channel()?;
+
+        // try to get the chaptchar max 30 times
+        for i in 0..30 {
+            // send a request
+            sender.send(Message::CaptchaRequest(file.clone()))?;
+
+            // try to get the info for 60 seconds
+            let now = ::std::time::Instant::now();
+            while now.elapsed() < ::std::time::Duration::from_secs(60) {
+                match receiver.recv_timeout(::std::time::Duration::from_secs(5)) {
+                    // when value is received and matched reurn download channel
+                    Ok(v) => {
+                        // we need a captcha response or we continue
+                        if let Some(v) = v.get_captcha_response() {
+                            if v.id == file.id() && v.file_id == file.file_id {
+                                // wait the 30 seconf delay from ShareOnline
+                                ::std::thread::sleep(::std::time::Duration::from_secs(30));
+
+                                // create the download stream
+                                let resp = reqwest::Client::new().get(&v.url).send()?;
+
+                                // only continue if the answer was successfull
+                                if resp.status() != reqwest::StatusCode::Ok {
+                                    bail!("Share-online free download failed");
+                                }
+
+                                // return the result
+                                return Ok(resp);
+                            }
+                        }
+
+                        continue;
+                    }
+                    // On error either continue or return error
+                    Err(e) => {
+                        if e == ::std::sync::mpsc::RecvTimeoutError::Timeout {
+                            continue;
+                        } else {
+                            bail!("Can't receive captcha solving");
+                        }
+                    }
+                };
+            }
+        }
+
+        bail!("Can't do free download");
     }
 }
