@@ -1,0 +1,56 @@
+<html>
+
+<head>
+    <title>SPE3D</title>
+    <link rel="stylesheet" type="text/css" href="libs/semantic.min.css">
+    <script src="libs/jquery-3.3.1.min.js"></script>
+    <script src="libs/semantic.min.js"></script>
+    <style>
+        body {
+            width: 400px;
+            background-color: #f2f7f6;
+        }
+
+        .pusher {
+            height: 500px;
+            margin-left: 10px;
+            margin-top: 65px;
+        }
+
+        .logo {
+            height: 25px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Menu Header -->
+    <div class="ui fixed menu">
+        <div class="ui container">
+            <a href="#" class="header item">
+                <img class="ui logo image" src="/pics/logo.png">
+            </a>
+            <a href="#" id="settings_button" class="item right"><i class="green big cog icon"></i></a>
+        </div>
+    </div>
+    <div class="pusher">
+        <!-- Settings panel -->
+        <div id="settings" class="ui segment">
+            <h3 class="ui header">Plugin Settings</h3>
+            <br />
+            <form class="ui form">
+                <div class="inline field">
+                    <input type="text" name="spe3d_server">
+                    <label>Server:Host</label>
+                </div>
+                <div class="ui toggle checkbox">
+                    <label>Show SPE3D Captcha Requests</label>
+                    <input type="checkbox" id="spe3d_captcha" tabindex="0" class="hidden">
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

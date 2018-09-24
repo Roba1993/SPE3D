@@ -1,42 +1,62 @@
+var spe3d_server;
+var websocket;
+
+// function to connect to the webserver
 function connect() {
-    var websocket = new WebSocket('ws://127.0.0.1:8000/updates');
+    websocket = new WebSocket('ws://' + spe3d_server + '/updates');
 
     websocket.onclose = function (e) {
-        console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+        //console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
         setTimeout(function () {
             connect();
         }, 1000);
     };
 
     websocket.onerror = function (err) {
-        console.error('Socket encountered error: ', err.message, 'Closing socket');
+        //console.error('Socket encountered error: ', err.message, 'Closing socket');
         websocket.close();
     };
 
     websocket.onmessage = (evt) => {
         var msg = JSON.parse(evt.data);
 
+        // only process captcha requests
         if (msg.CaptchaRequest != undefined) {
-            console.log(msg);
-
-            switch (msg.CaptchaRequest.hoster) {
-                case 'ShareOnline':
-                    handleShareOnline(msg.CaptchaRequest)
-                    break;
-            }
+            // only when captcha is active check the captchars
+            chrome.storage.local.get(["spe3d_captcha"], function (result) {
+                if (result.spe3d_captcha) {
+                    switch (msg.CaptchaRequest.hoster) {
+                        case 'ShareOnline':
+                            handleShareOnline(msg.CaptchaRequest)
+                            break;
+                    }
+                }
+            });
         }
     };
 }
-connect();
 
+// get the spe3d server value and start the websocket
+chrome.storage.local.get(["spe3d_server"], function (result) {
+    spe3d_server = result.spe3d_server;
+    connect();
+});
 
+// empty the store on every start
 function emptyStore() {
     chrome.storage.local.set({ 'ShareOnline': null }, function () {
     });
 }
 emptyStore();
 
+// only run when the plugin get's installed
+chrome.runtime.onInstalled.addListener(function () {
+    chrome.storage.local.set({ 'spe3d_captcha': true });
+    chrome.storage.local.set({ 'spe3d_server': 'localhost:8000' });
+});
 
+
+// listener to remove tabs
 chrome.runtime.onMessage.addListener(
     function (request) {
         if (request.closeTab) {
@@ -45,7 +65,18 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
+// when the spe3d server changed, update the value
+chrome.storage.onChanged.addListener(function (changes, namespace) {
+    for (key in changes) {
+        if (key === "spe3d_server") {
+            spe3d_server = storageChange.newValue;
+            websocket.close();
+            connect();
+        }
+    }
+});
 
+// handle the share online captcha request
 function handleShareOnline(file) {
     chrome.storage.local.get(['ShareOnline'], function (result) {
         // Only continue if no other ShareOnline request is set
