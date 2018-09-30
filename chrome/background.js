@@ -5,7 +5,12 @@ var websocket;
 function connect() {
     websocket = new WebSocket('ws://' + spe3d_server + '/updates');
 
+    websocket.onopen = function () {
+        chrome.storage.local.set({ 'ServerStatus': true });
+    };
+
     websocket.onclose = function (e) {
+        chrome.storage.local.set({ 'ServerStatus': false });
         //console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
         setTimeout(function () {
             connect();
@@ -30,6 +35,9 @@ function connect() {
                             handleShareOnline(msg.CaptchaRequest)
                             break;
                     }
+                }
+                else {
+                    chrome.runtime.sendMessage({ dloadUpdate: result });
                 }
             });
         }
@@ -69,7 +77,7 @@ chrome.runtime.onMessage.addListener(
 chrome.storage.onChanged.addListener(function (changes, namespace) {
     for (key in changes) {
         if (key === "spe3d_server") {
-            spe3d_server = storageChange.newValue;
+            spe3d_server = changes[key].newValue;
             websocket.close();
             connect();
         }

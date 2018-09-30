@@ -40,3 +40,31 @@ $('#settings .ui.checkbox').checkbox({
         chrome.storage.local.set({ 'spe3d_captcha': false });
     }
 });
+
+// set the server color
+chrome.storage.local.get(['ServerStatus'], function (result) {
+    $('#server_status').hide();
+    if (result.ServerStatus) {
+        $('#server_status').removeClass("red").addClass("green").redraw();
+    }
+    else {
+        $('#server_status').removeClass("green").addClass("red").redraw();
+    }
+    $('#server_status').show();
+});
+
+// when the server status changes, update icon
+chrome.storage.onChanged.addListener(function (changes) {
+    for (key in changes) {
+        if (key === "ServerStatus") {
+            $('#server_status').hide();
+            if (changes[key].newValue) {
+                $('#server_status').removeClass("red").addClass("green").redraw();
+            }
+            else {
+                $('#server_status').removeClass("green").addClass("red").redraw();
+            }
+            $('#server_status').show();
+        }
+    }
+});
