@@ -41,6 +41,13 @@ $('#settings .ui.checkbox').checkbox({
     }
 });
 
+
+$.fn.redraw = function () {
+    $(this).each(function () {
+        var redraw = this.offsetHeight;
+    });
+};
+
 // set the server color
 chrome.storage.local.get(['ServerStatus'], function (result) {
     $('#server_status').hide();
