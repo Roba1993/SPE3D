@@ -3,12 +3,12 @@
 //!
 //! Right now only Premium Accounts are supported.
 
-use bus::{Message, MessageBus};
-use config::Config;
-use error::*;
-use loader::Loader;
+use crate::bus::{Message, MessageBus};
+use crate::config::Config;
+use crate::error::*;
+use crate::loader::Loader;
 use md5::{Digest, Md5};
-use models::{DownloadFile, FileHash, FileHoster, FileStatus, SmartDownloadList};
+use crate::models::{DownloadFile, FileHash, FileHoster, FileStatus, SmartDownloadList};
 use regex::Regex;
 use reqwest;
 use std::fs::File;
@@ -23,9 +23,9 @@ pub struct ShareOnline {
 
 impl Loader for ShareOnline {
     /// This function updates an Share-Online account with the actual status
-    fn update_account(&self, account: &mut ::config::ConfigAccount) -> Result<()> {
+    fn update_account(&self, account: &mut crate::config::ConfigAccount) -> Result<()> {
         // This implementation can only check share-online accounts
-        if account.hoster != ::config::ConfigHoster::ShareOnline {
+        if account.hoster != crate::config::ConfigHoster::ShareOnline {
             bail!("Not a Share-Online Account");
         }
 
@@ -45,7 +45,7 @@ impl Loader for ShareOnline {
 
         // when the account isn't valid
         if body == "** INVALID USER DATA **" {
-            account.status = ::config::ConfigAccountStatus::NotValid;
+            account.status = crate::config::ConfigAccountStatus::NotValid;
             return Ok(());
         }
 
@@ -55,10 +55,10 @@ impl Loader for ShareOnline {
             .ok_or("No account group available")?
             .as_str()[6..];
         if acc_type == "Sammler" {
-            account.status = ::config::ConfigAccountStatus::Free;
+            account.status = crate::config::ConfigAccountStatus::Free;
             return Ok(());
         } else if acc_type == "Premium" {
-            account.status = ::config::ConfigAccountStatus::Premium;
+            account.status = crate::config::ConfigAccountStatus::Premium;
             return Ok(());
         }
 
@@ -110,8 +110,8 @@ impl Loader for ShareOnline {
     /// Download a file, with this laoder
     fn download(&self, file: &DownloadFile) -> Result<::reqwest::Response> {
         let acc = match self.config.get().get_account(
-            ::config::ConfigHoster::ShareOnline,
-            ::config::ConfigAccountStatus::Premium,
+            crate::config::ConfigHoster::ShareOnline,
+            crate::config::ConfigAccountStatus::Premium,
         ) {
             Ok(a) => a,
             Err(_) => {
@@ -171,8 +171,8 @@ impl Loader for ShareOnline {
 
         // check for share-online premium account
         match self.config.get().get_account(
-            ::config::ConfigHoster::ShareOnline,
-            ::config::ConfigAccountStatus::Premium,
+            crate::config::ConfigHoster::ShareOnline,
+            crate::config::ConfigAccountStatus::Premium,
         ) {
             Ok(_) => {
                 // return a new id when a download id exists
@@ -207,7 +207,7 @@ impl ShareOnline {
     }
 
     /// Share-Online premium login
-    fn login(&self, acc: ::config::ConfigAccount) -> Result<(String, String)> {
+    fn login(&self, acc: crate::config::ConfigAccount) -> Result<(String, String)> {
         // download the user data
         let login_url = format!(
             "https://api.share-online.biz/account.php?username={}&password={}&act=userDetails",
@@ -243,8 +243,8 @@ impl ShareOnline {
     /// Get the premium download url
     fn get_dload_url(&self, file: &DownloadFile) -> Result<String> {
         let acc = self.config.get().get_account(
-            ::config::ConfigHoster::ShareOnline,
-            ::config::ConfigAccountStatus::Premium,
+            crate::config::ConfigHoster::ShareOnline,
+            crate::config::ConfigAccountStatus::Premium,
         )?;
 
         // make the request call
@@ -296,7 +296,7 @@ impl ShareOnline {
         let (sender, receiver) = self.bus.channel()?;
 
         // try to get the chaptchar max 30 times
-        for i in 0..30 {
+        for _i in 0..30 {
             // send a request
             sender.send(Message::CaptchaRequest(file.clone()))?;
 

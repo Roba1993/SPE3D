@@ -17,7 +17,7 @@
 //! assert_eq!("0.0.0.0", myconfig.webserver_ip);
 //! ```
 
-use error::*;
+use crate::error::*;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::sync::{Arc, RwLock};

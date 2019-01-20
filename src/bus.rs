@@ -1,8 +1,8 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use error::*;
-use models::{DownloadFile, DownloadList, CaptchaResult};
+use crate::error::*;
+use crate::models::{DownloadFile, DownloadList, CaptchaResult};
 
 /// Message bus to share messages through the
 /// complete system.

@@ -1,13 +1,13 @@
 //! Holding all data models which are shared across the complete crate.
 
-use error::*;
+use crate::error::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use dlc_decrypter::DlcPackage;
 use std::sync::{Arc, RwLock, Mutex};
 use std::sync::mpsc::{Sender, Receiver};
 use std::fs::File;
 use std::io::prelude::*;
-use bus::{MessageBus, Message};
+use crate::bus::{MessageBus, Message};
 use std::thread;
 
 
@@ -406,7 +406,7 @@ impl SmartDownloadList {
         let file = File::open("./config/status.json")?;       
         let (id, d_list) : (usize, DownloadList) = ::serde_json::from_reader(file)?;
         
-        ::models::set_idcounter(id);
+        crate::models::set_idcounter(id);
 
         for mut p in d_list {
             // reset speed

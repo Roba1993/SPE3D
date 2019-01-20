@@ -3,10 +3,10 @@
 
 pub mod so;
 
-use error::*;
-use models::{DownloadFile, FileStatus, SmartDownloadList};
+use crate::error::*;
+use crate::models::{DownloadFile, FileStatus, SmartDownloadList};
 use self::so::ShareOnline;
-use config::Config;
+use crate::config::Config;
 use std::thread;
 use std::sync::{Arc};
 use std::io::Read;
@@ -14,13 +14,13 @@ use md5::{Md5, Digest};
 use std::fs::File;
 use std::io::Write;
 use std::time::{Duration, Instant};
-use bus::{MessageBus, Message};
+use crate::bus::{MessageBus, Message};
 
 
 /// This `Loader` defines which funtionalities are used to download a file from a source
 pub trait Loader {
     /// This function updates an Share-Online account with the actual status
-    fn update_account(&self, account: &mut ::config::ConfigAccount) -> Result<()> ;
+    fn update_account(&self, account: &mut crate::config::ConfigAccount) -> Result<()> ;
 
     /// Check the download url and return the file info
     fn check_url(&self, url: &str) -> Result<Option<DownloadFile>>;
@@ -70,7 +70,7 @@ impl Downloader {
 
         // new thread for the download
         thread::spawn(move || {
-            if let Err(e) = this.internal_download(id) {
+            if let Err(_e) = this.internal_download(id) {
                 this.d_list.set_status(id, &FileStatus::Unknown).unwrap();
             }
         });
@@ -103,7 +103,7 @@ impl Downloader {
     }
 
     /// Update and complete the account data
-    pub fn update_account(&self, account: &mut ::config::ConfigAccount) -> Result<()> {
+    pub fn update_account(&self, account: &mut crate::config::ConfigAccount) -> Result<()> {
         // loop over all the loader
         for l in self.loader.iter() {
             // each loader can try to update the account
@@ -144,7 +144,7 @@ impl Downloader {
         self.d_list.set_downloaded(f_info.id(), 0)?;
 
         ::std::fs::create_dir_all(format!("./out/{}", pck.name))?;
-        let hash = stream.write_to_file(path.clone(), f_info.id(), &self.bus)?;
+        let _hash = stream.write_to_file(path.clone(), f_info.id(), &self.bus)?;
 
         // set the downloaded attribute to the size, because all is downloaded and set speed to 0
         self.d_list.add_downloaded(f_info.id(), 0)?;

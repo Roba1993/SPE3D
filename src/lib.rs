@@ -25,15 +25,15 @@ pub mod loader;
 pub mod models;
 
 // reexports for easier use of the important structures
-pub use config::Config;
+pub use crate::config::Config;
 
 // Imports for the Download Manager
-use bus::MessageBus;
+use crate::bus::MessageBus;
 use dlc_decrypter::DlcDecoder;
-use error::*;
+use crate::error::*;
 use error_chain::ChainedError;
-use loader::Downloader;
-use models::{DownloadPackage, FileStatus, SmartDownloadList, CaptchaResult};
+use crate::loader::Downloader;
+use crate::models::{DownloadPackage, FileStatus, SmartDownloadList, CaptchaResult};
 use std::thread;
 
 /// Main entry point for the API. This structure allows to add potential downloads
@@ -147,7 +147,7 @@ impl DownloadManager {
     }
 
     /// Check the actual status of an account and return it
-    pub fn check_account(&self, id: usize) -> Result<::config::ConfigAccount> {
+    pub fn check_account(&self, id: usize) -> Result<crate::config::ConfigAccount> {
         for mut acc in self.config.get().accounts {
             if acc.id == id {
                 self.downloader.update_account(&mut acc)?;
@@ -162,7 +162,7 @@ impl DownloadManager {
     /// Add an captcha result to the download manager
     pub fn add_captcha_result(&self, cr: CaptchaResult) -> Result<()> {
         let sender = self.bus.get_sender()?;
-        sender.send(::bus::Message::CaptchaResponse(cr))?;
+        sender.send(crate::bus::Message::CaptchaResponse(cr))?;
         Ok(())
     }
 

@@ -6,6 +6,7 @@ license = "MIT"
 repository = "https://github.com/Roba1993/SPE3D"
 description = "Fast and Easy Download Manager for Servers"
 autobins = false
+edition = "2018"
 
 [[bin]]
 name = "spe3d"
@@ -31,6 +32,6 @@ serde_json = "1.0.17"
 toml = "0.4.6"
 
 # http server
-warp = "0.1.3"
+warp = "0.1.11"
 bytes = "0.4.9"
-futures = "0.1"
+futures = "0.1.25"
