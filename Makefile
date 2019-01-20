@@ -11,8 +11,6 @@ frontend:
 	cp -r react/dist/* www/
 
 docker: frontend
-	docker pull clux/muslrust
-	docker run -v cargo-cache:/root/.cargo -v "$(PWD):/volume" --rm -it clux/muslrust cargo build --release
 	docker build -t roba1993/spe3d .
 
 .PHONY: docker-run
