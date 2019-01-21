@@ -7,7 +7,7 @@ import Dropzone from 'react-dropzone'
 export default class AddAccount extends Component {
     constructor() {
         super()
-        this.state = { files: [], hoster: '', username: '', password: '' }
+        this.state = { hoster: '', username: '', password: '' }
     }
 
     onDrop(acceptedFiles) {

@@ -212,6 +212,7 @@ pub struct ConfigAccount {
     pub hoster: ConfigHoster,
     pub username: String,
     pub password: String,
+    #[serde(skip_deserializing)]
     pub status: ConfigAccountStatus,
     #[serde(skip_deserializing)]
     #[serde(default = "::std::time::SystemTime::now")]

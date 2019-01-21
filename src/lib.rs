@@ -29,11 +29,11 @@ pub use crate::config::Config;
 
 // Imports for the Download Manager
 use crate::bus::MessageBus;
-use dlc_decrypter::DlcDecoder;
 use crate::error::*;
-use error_chain::ChainedError;
 use crate::loader::Downloader;
-use crate::models::{DownloadPackage, FileStatus, SmartDownloadList, CaptchaResult};
+use crate::models::{CaptchaResult, DownloadPackage, FileStatus, SmartDownloadList};
+use dlc_decrypter::DlcDecoder;
+use error_chain::ChainedError;
 use std::thread;
 
 /// Main entry point for the API. This structure allows to add potential downloads
@@ -183,7 +183,9 @@ impl DownloadManager {
         // on time error also check the account
         for acc in self.config.get().accounts {
             if let Ok(e) = acc.checked.elapsed() {
-                if e > ::std::time::Duration::from_secs(300) {
+                if e > ::std::time::Duration::from_secs(300)
+                    || acc.status == self::config::ConfigAccountStatus::Unknown
+                {
                     self.check_account(acc.id)?;
                     break;
                 }

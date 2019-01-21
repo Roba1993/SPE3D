@@ -19,6 +19,7 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc, Mutex,
 };
+use warp::http::header::{HeaderMap, HeaderValue};
 use warp::ws::{Message, WebSocket};
 use warp::Filter;
 
@@ -32,6 +33,11 @@ fn main() {
 
     // start the websocket server and add it to the download manager
     //websocket::start_ws(&config, &dm);
+
+    let mut allow_headers = HeaderMap::new();
+    allow_headers.insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
+    allow_headers.insert("Access-Control-Allow-Methods", HeaderValue::from_static("POST, GET, OPTIONS, DELETE"));
+    allow_headers.insert("Access-Control-Allow-Headers", HeaderValue::from_static("*"));
 
     // Keep track of all connected users, key is usize, value
     // is a websocket sender.
@@ -48,11 +54,11 @@ fn main() {
     let get_files = warp::fs::dir("./www/");
 
     let get_index = warp::get2()
-        .and(warp::index())
+        .and(warp::path::end())
         .and(warp::fs::file("./www/index.html"));
 
     let get_test = warp::get2()
-        .and(api.and(warp::path("test")).and(warp::path::index()))
+        .and(api.and(warp::path("test")).and(warp::path::end()))
         .and_then(get_test)
         .with(warp::reply::with::header(
             "Access-Control-Allow-Origin",
@@ -60,7 +66,7 @@ fn main() {
         ));
 
     let get_downloads = warp::get2()
-        .and(api.and(warp::path("downloads")).and(warp::path::index()))
+        .and(api.and(warp::path("downloads")).and(warp::path::end()))
         .and(dmw.clone())
         .and_then(get_downloads)
         .with(warp::reply::with::header(
@@ -72,8 +78,9 @@ fn main() {
         .and(
             api.and(warp::path("start-download"))
                 .and(warp::path::param::<usize>())
-                .and(warp::path::index()),
-        ).and(dmw.clone())
+                .and(warp::path::end()),
+        )
+        .and(dmw.clone())
         .and_then(post_start_download)
         .with(warp::reply::with::header(
             "Access-Control-Allow-Origin",
@@ -81,7 +88,7 @@ fn main() {
         ));
 
     let post_add_links = warp::post2()
-        .and(api.and(warp::path("add-links")).and(warp::path::index()))
+        .and(api.and(warp::path("add-links")).and(warp::path::end()))
         .and(dmw.clone())
         .and(warp::body::json())
         .and_then(post_add_links)
@@ -94,8 +101,9 @@ fn main() {
         .and(
             api.and(warp::path("delete-link"))
                 .and(warp::path::param::<usize>())
-                .and(warp::path::index()),
-        ).and(dmw.clone())
+                .and(warp::path::end()),
+        )
+        .and(dmw.clone())
         .and_then(post_delete_link)
         .with(warp::reply::with::header(
             "Access-Control-Allow-Origin",
@@ -103,7 +111,7 @@ fn main() {
         ));
 
     let post_add_dlc = warp::post2()
-        .and(api.and(warp::path("add-dlc")).and(warp::path::index()))
+        .and(api.and(warp::path("add-dlc")).and(warp::path::end()))
         .and(dmw.clone())
         .and(warp::body::concat())
         .and_then(post_add_dlc)
@@ -113,7 +121,7 @@ fn main() {
         ));
 
     let get_config = warp::get2()
-        .and(api.and(warp::path("config")).and(warp::path::index()))
+        .and(api.and(warp::path("config")).and(warp::path::end()))
         .and(dmw.clone())
         .and_then(get_config)
         .with(warp::reply::with::header(
@@ -125,8 +133,9 @@ fn main() {
         .and(
             api.and(warp::path("config"))
                 .and(warp::path("server"))
-                .and(warp::path::index()),
-        ).and(dmw.clone())
+                .and(warp::path::end()),
+        )
+        .and(dmw.clone())
         .and(warp::body::json())
         .and_then(post_config_server)
         .with(warp::reply::with::header(
@@ -138,8 +147,9 @@ fn main() {
         .and(
             api.and(warp::path("config"))
                 .and(warp::path("account"))
-                .and(warp::path::index()),
-        ).and(dmw.clone())
+                .and(warp::path::end()),
+        )
+        .and(dmw.clone())
         .and(warp::body::json())
         .and_then(post_config_account)
         .with(warp::reply::with::header(
@@ -152,26 +162,18 @@ fn main() {
             api.and(warp::path("config"))
                 .and(warp::path("account"))
                 .and(warp::path::param::<usize>())
-                .and(warp::path::index()),
-        ).and(dmw.clone())
+                .and(warp::path::end()),
+        )
+        .and(dmw.clone())
         .and_then(delete_config_account)
-        .with(warp::reply::with::header(
-            "Access-Control-Allow-Origin",
-            "*",
-        ));
+        .with(warp::reply::with::headers(allow_headers.clone()));
 
     let options = warp::options()
         .map(warp::reply)
-        .with(warp::reply::with::header(
-            "Access-Control-Allow-Origin",
-            "*",
-        )).with(warp::reply::with::header(
-            "Access-Control-Allow-Headers",
-            "*",
-        ));
+        .with(warp::reply::with::headers(allow_headers.clone()));
 
     let post_add_ejs = warp::post2()
-        .and(api.and(warp::path("add-ejs")).and(warp::path::index()))
+        .and(api.and(warp::path("add-ejs")).and(warp::path::end()))
         .and(dmw.clone())
         .and(warp::body::concat())
         .and_then(post_add_ejs)
@@ -183,8 +185,9 @@ fn main() {
     let post_captcha_result = warp::post2()
         .and(
             api.and(warp::path("captcha-result"))
-                .and(warp::path::index()),
-        ).and(dmw.clone())
+                .and(warp::path::end()),
+        )
+        .and(dmw.clone())
         .and(warp::body::json())
         .and_then(post_captcha_result)
         .with(warp::reply::with::header(
@@ -198,9 +201,7 @@ fn main() {
         .and(users)
         .map(|ws: warp::ws::Ws2, users| {
             // This will call our function if the handshake succeeds.
-            ws.on_upgrade(move |socket| {
-                ws_user_connected(socket, users)
-            })
+            ws.on_upgrade(move |socket| ws_user_connected(socket, users))
         });
 
     let routes = get_index
@@ -260,7 +261,8 @@ fn post_add_links(
             .filter(|u| u.is_some())
             .map(|u| u.unwrap().to_string())
             .collect(),
-    ).unwrap();
+    )
+    .unwrap();
     Ok("")
 }
 
