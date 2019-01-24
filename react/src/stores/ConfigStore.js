@@ -47,6 +47,7 @@ export default class ConfigStore {
                 }
                 else {
                     this.global.notify.createOkMsg("Account added", "The server successfully added a hoster account");
+                    this.fetchConfig();
                 }
             })
     }
