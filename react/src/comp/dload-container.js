@@ -8,7 +8,7 @@ export default class DloadContainer extends Component {
 
     start_download(e, id) {
         e.preventDefault();
-        this.props.global.dload.startDload(id);
+        this.props.global.dload.con.startDloadById(id);
     }
 
     change_open(e) {

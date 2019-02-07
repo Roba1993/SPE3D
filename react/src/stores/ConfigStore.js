@@ -2,10 +2,12 @@ import { observable, computed, action } from "mobx";
 
 export default class ConfigStore {
     global;
+    extension = (window.chrome && chrome.runtime && chrome.runtime.id != undefined)
     @observable server;
+    @observable server_online = false;
+    @observable server_remote = window.location.hostname;
     @observable share_online = [];
-
-
+    
     constructor(global) {
         this.global = global;
         this.fetchConfig();

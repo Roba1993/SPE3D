@@ -36,18 +36,40 @@ function connect() {
                             break;
                     }
                 }
-                else {
-                    chrome.runtime.sendMessage({ dloadUpdate: result });
-                }
             });
+        }
+        // Save download list into store
+        else if (msg.DownloadList != undefined) {
+            console.log(msg);
+            console.log("set download list");
+            chrome.storage.local.set({ 'DownloadList': msg.DownloadList });
         }
     };
 }
 
-// get the spe3d server value and start the websocket
+// load dload list
+function loadDownloadList() {
+    fetch(`http://` + spe3d_server + `/api/downloads`)
+        .then(res => {
+            if (res.status != 200) {
+                // handle error
+            }
+
+            return res.json()
+        })
+        .then(dloads => {
+            chrome.storage.local.set({ 'DownloadList': dloads });
+        })
+        .catch(error => {
+            // handle error
+        });
+}
+
+// get the spe3d server value and start the websocket and load the download list
 chrome.storage.local.get(["spe3d_server"], function (result) {
     spe3d_server = result.spe3d_server;
     connect();
+    loadDownloadList();
 });
 
 // empty the store on every start
@@ -56,6 +78,8 @@ function emptyStore() {
     });
 }
 emptyStore();
+
+
 
 // only run when the plugin get's installed
 chrome.runtime.onInstalled.addListener(function () {
@@ -118,6 +142,8 @@ function handleShareOnline(file) {
         }
     });
 
-
-
 }
+
+console.log("Location: " + window.location.hostname);
+console.log("addon:" + (window.chrome && chrome.runtime && chrome.runtime.id));
+

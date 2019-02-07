@@ -1,14 +1,32 @@
 import { computed, observable } from "mobx";
+import Dload from "./../con/Dload";
+import Ws from "./../con/Ws";
 
 export default class DloadStore {
     global;
+    con;
     @observable dloads = [];
 
     constructor(global) {
         this.global = global;
+        this.con = new Dload(global);
+        new Ws(global);
 
-        this.fetchDloads();
-        this.websocket();
+        // get the downloads
+        this.con.getDloads().then(m => this.replaceDloads(m));
+    }
+
+    getFileById(id) {
+        // loop over all container
+        for(var i of this.dloads) {
+            // loop over all files
+            for(var j of i.files) {
+                // check if the id is matching
+                if(j.id == id) {
+                    return j;
+                }
+            }
+        }
     }
 
     getContainer(id) {
@@ -25,42 +43,6 @@ export default class DloadStore {
         }
     }
 
-    startDload(id) {
-        if (!id) {
-            return;
-        }
-
-        fetch("http://" + window.location.hostname + ":8000/api/start-download/" + id,
-            {
-                method: "POST"
-            })
-            .then(res => { 
-                if (res.status != 200) {
-                    this.global.notify.createErrorMsg("Download not started", "The server was not able to start the download");
-                }
-            })
-    }
-
-    removeDload(id) {
-        if (!id) {
-            return;
-        }
-
-        fetch("http://" + window.location.hostname + ":8000/api/delete-link/" + id,
-            {
-                method: "POST",
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/json'
-                },
-            })
-            .then(res => {
-                if (res.status != 200) {
-                    this.global.notify.createErrorMsg("Deletion failed", "The server was not able to remove the link");
-                }
-            });
-    }
-
     replaceDloads(rawObj) {
         var dloads = [];
 
@@ -69,42 +51,6 @@ export default class DloadStore {
         });
 
         this.dloads.replace(dloads);
-    }
-
-    fetchDloads() {
-        fetch(`http://` + window.location.hostname + `:8000/api/downloads`)
-            .then(res => {
-                if (res.status != 200) {
-                    this.global.notify.createErrorMsg("Download list not avialable", "The server was not able to provide the download list");
-                }
-
-                return res.json()
-            })
-            .then(dloads => {
-                this.replaceDloads(dloads);
-                //console.log(dloads);
-                //console.log(this.dloads);
-            })
-            .catch(error => {
-                this.global.notify.createErrorMsg("Connection to server failed", "Can't get the download list from server");
-            });
-    }
-
-    websocket() {
-        var websocket = new WebSocket('ws://' + window.location.hostname + ':8000/updates');
-        websocket.onmessage = (evt) => {
-            var msg = JSON.parse(evt.data);
-            //console.log(msg);
-            
-            if(msg.DownloadList != undefined) {
-                this.replaceDloads(msg.DownloadList);
-            }
-            else if(msg.DownloadSpeed != undefined) {
-                var file = this.getFile(msg.DownloadSpeed[0]);
-                file.downloaded += msg.DownloadSpeed[1];
-                file.speed = msg.DownloadSpeed[1];
-            }
-        }
     }
 }
 
@@ -135,6 +81,7 @@ class Container {
             this.files.push(new File(f));
         });
     }
+
 }
 
 class File {

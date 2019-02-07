@@ -6,9 +6,9 @@ import ConfigStore from "./ConfigStore";
 
 class GlobalStore {
     @observable notify = new NotifyStore();
+    @observable config = new ConfigStore(this);
     @observable ui = new UiStore(this);
     @observable dload = new DloadStore(this);
-    @observable config = new ConfigStore(this);
 }
 
 const global = window.global = new GlobalStore();

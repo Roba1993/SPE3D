@@ -60,6 +60,12 @@ chrome.storage.local.get(['ServerStatus'], function (result) {
     $('#server_status').show();
 });
 
+// set download view initially
+chrome.storage.local.get(['DownloadList'], function (result) {
+    $('#console').text(JSON.stringify(result.DownloadList));
+    updateDownloadList(result.DownloadList);
+});
+
 // when the server status changes, update icon
 chrome.storage.onChanged.addListener(function (changes) {
     for (key in changes) {
@@ -73,5 +79,36 @@ chrome.storage.onChanged.addListener(function (changes) {
             }
             $('#server_status').show();
         }
+        else if (key == "DownloadList") {
+            $('#console').text(JSON.stringify(changes[key]));
+            updateDownloadList(changes[key]);
+        }
     }
 });
+
+function updateDownloadList(data) {
+    var html = '';
+
+    for (container of data) {
+        var finished = container.files.reduce((pre, curr) => (curr.status == "Downloaded") ? pre += 1 : pre, 0);
+
+        html += `<div class="ui segment">
+                    <div class="ui equal width grid ">
+                        <div class="column">
+                            <button class="circular ui icon button green medium">
+                                <i class="arrow down icon"></i>
+                            </button>
+                        </div>
+                    
+                        
+                    `;
+
+        html += '<div class="column" style="text-align: center; font-weight: bold; font-size: 20px;">';
+        html += finished + '/' + container.files.length;
+        html += `</div>`
+
+        html += `</div></div>`
+    }
+
+    $('#downloads').html(html);
+}

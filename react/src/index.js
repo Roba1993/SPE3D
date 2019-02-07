@@ -19,12 +19,12 @@ class App extends Component {
 
     deleteLink(e) {
         e.preventDefault();
-        global.dload.removeDload(global.ui.selected);
+        global.dload.con.removeDloadById(global.ui.selected);
     }
 
     startDownload(e) {
         e.preventDefault();
-        global.dload.startDload(global.ui.selected);
+        global.dload.con.startDloadById(global.ui.selected);
     }
 
     deleteAccount(e) {
