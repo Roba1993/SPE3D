@@ -4,7 +4,7 @@
   "description": "React frontend for SPE3D download manager",
   "scripts": {
     "start": "cross-env NODE_ENV=development parcel index.html ",
-    "build": "cross-env NODE_ENV=production parcel build index.html --public-url /"
+    "build": "cross-env NODE_ENV=production parcel build index.html --public-url '.'"
   },
   "keywords": [
     "download",

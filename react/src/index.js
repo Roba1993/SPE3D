@@ -110,5 +110,7 @@ const styleLinks = {
     marginRight: '10px'
 }
 
+document.body.style.width = "800px";
+document.body.style.height = "600px";
 
-ReactDOM.render(<App global={global} />, document.getElementById('app'))
+ReactDOM.render(<App global={global}/>, document.getElementById('app'))

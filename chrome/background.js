@@ -146,4 +146,3 @@ function handleShareOnline(file) {
 
 console.log("Location: " + window.location.hostname);
 console.log("addon:" + (window.chrome && chrome.runtime && chrome.runtime.id));
-

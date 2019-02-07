@@ -5,7 +5,7 @@ export default class WsAddon {
     constructor(global_store) {
         this.global = global_store;
 
-        connect();
+        this.connect();
     }
 
     connect() {

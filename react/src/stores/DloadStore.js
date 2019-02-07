@@ -12,8 +12,10 @@ export default class DloadStore {
         this.con = new Dload(global);
         new Ws(global);
 
-        // get the downloads
-        this.con.getDloads().then(m => this.replaceDloads(m));
+        if(!this.global.config.extension) {
+            // get the downloads
+            this.con.getDloads().then(m => this.replaceDloads(m));
+        }
     }
 
     getFileById(id) {

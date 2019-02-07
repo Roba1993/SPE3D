@@ -20,3 +20,7 @@ docker-run:
 .PHONY: docker-rm
 docker-rm:
 	docker rm --force spe3d
+
+addon: frontend
+	rm -rf chrome/www/
+	cp -r www/ chrome/www/
