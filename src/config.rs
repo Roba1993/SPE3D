@@ -142,6 +142,20 @@ impl ConfigData {
             }
         }
 
+        // get account config
+        if let Some(so) = tml.as_table().and_then(|t| t.get("filer").and_then(|s| s.as_array())) {
+            for s in so {
+                accounts.push(ConfigAccount {
+                    id: IDCOUNTER.fetch_add(1, Ordering::SeqCst),
+                    hoster: ConfigHoster::Filer,
+                    username: s.as_table().and_then(|t| t.get("username").and_then(|s| s.as_str())).unwrap_or("").to_string(),
+                    password: s.as_table().and_then(|t| t.get("password").and_then(|s| s.as_str())).unwrap_or("").to_string(),
+                    status: ConfigAccountStatus::Unknown,
+                    checked: ::std::time::SystemTime::now(),
+                });
+            }
+        }
+
         Ok(ConfigData { server, accounts })
     }
 
@@ -249,6 +263,7 @@ impl Default for ConfigAccountStatus {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ConfigHoster {
     ShareOnline,
+    Filer,
     Unknown(String),
 }
 
@@ -256,6 +271,7 @@ impl ::std::fmt::Display for ConfigHoster {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         match self {
             ConfigHoster::ShareOnline => write!(f, "share_online"),
+            ConfigHoster::Filer => write!(f, "filer"),
             ConfigHoster::Unknown(s) => write!(f, "{}", s),
         }
     }
@@ -265,6 +281,9 @@ impl From<String> for ConfigHoster {
     fn from(data: String) -> ConfigHoster {
         if data == "share-online.biz" {
             ConfigHoster::ShareOnline
+        }
+        else if data == "filer.net" {
+            ConfigHoster::Filer
         }
         else {
             ConfigHoster::Unknown(data)

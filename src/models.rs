@@ -110,6 +110,7 @@ impl DownloadFile {
 pub enum FileHoster {
     Unknown,
     ShareOnline,
+    Filer
 }
 
 impl Default for FileHoster {

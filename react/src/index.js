@@ -41,7 +41,7 @@ class App extends Component {
                 <Icon name='arrow down' size='large' color={this.props.global.ui.selected ? 'green' : 'grey'} onClick={(e) => { this.startDownload(e) }} />
             </Menu.Item>
         }
-        else if (this.props.global.ui.path == '/config' && this.props.global.ui.configTab == 'accounts' ) {
+        else if (this.props.global.ui.path == '/config' && this.props.global.ui.configTab == 'accounts') {
             return <Menu.Item name='actions' style={styleButtons} active={false}>
                 <Icon.Group size='large' onClick={(e) => { global.ui.modalAddAccount = true }}><Icon name='key' /><Icon corner name='plus' /></Icon.Group>
                 <Icon name='trash' size='large' color={this.props.global.ui.accountSelected ? 'green' : 'grey'} onClick={(e) => { this.deleteAccount(e) }} />
@@ -110,7 +110,9 @@ const styleLinks = {
     marginRight: '10px'
 }
 
-document.body.style.width = "800px";
-document.body.style.height = "600px";
+if (global.config.extension) {
+    document.body.style.width = "800px";
+    document.body.style.height = "600px";
+}
 
-ReactDOM.render(<App global={global}/>, document.getElementById('app'))
+ReactDOM.render(<App global={global} />, document.getElementById('app'))

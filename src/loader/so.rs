@@ -36,7 +36,7 @@ impl Loader for ShareOnline {
         let mut resp = reqwest::get(&url)?;
 
         // only continue if the answer was successfull
-        if resp.status() != reqwest::StatusCode::Ok {
+        if resp.status() != reqwest::StatusCode::OK {
             bail!("Share-online login failed, some connection error occurred");
         }
 
@@ -82,7 +82,7 @@ impl Loader for ShareOnline {
         let mut resp = reqwest::get(&req)?;
 
         // only continue if the answer was successfull
-        if resp.status() != reqwest::StatusCode::Ok {
+        if resp.status() != reqwest::StatusCode::OK {
             bail!("Share-online login failed, some connection error occurred");
         }
 
@@ -109,6 +109,10 @@ impl Loader for ShareOnline {
 
     /// Download a file, with this laoder
     fn download(&self, file: &DownloadFile) -> Result<::reqwest::Response> {
+        if file.hoster != FileHoster::ShareOnline {
+            bail!("Wrong hoster");
+        }
+
         let acc = match self.config.get().get_account(
             crate::config::ConfigHoster::ShareOnline,
             crate::config::ConfigAccountStatus::Premium,
@@ -123,20 +127,20 @@ impl Loader for ShareOnline {
         let url = self.get_dload_url(file)?;
 
         // set the download header
-        let mut headers = reqwest::header::Headers::new();
-        headers.set_raw(
-            "Cookie",
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.insert(
+            reqwest::header::COOKIE,
             format!(
                 "a={}; Expires={}; HttpOnly; Path=/; Domain=.share-online.biz",
                 key, expire_date
-            ),
+            ).parse().unwrap(),
         );
 
         // make the request
         let resp = reqwest::Client::new().get(&url).headers(headers).send()?;
 
         // only continue if the answer was successfull
-        if resp.status() != reqwest::StatusCode::Ok {
+        if resp.status() != reqwest::StatusCode::OK {
             bail!("Share-online file info failed, please check your credentials or download link");
         }
 
@@ -216,7 +220,7 @@ impl ShareOnline {
         let mut resp = reqwest::get(&login_url)?;
 
         // only continue if the answer was successfull
-        if resp.status() != reqwest::StatusCode::Ok {
+        if resp.status() != reqwest::StatusCode::OK {
             bail!("Share-online login failed, please check your credentials");
         }
 
@@ -255,7 +259,7 @@ impl ShareOnline {
         let mut resp = reqwest::get(&info_url)?;
 
         // only continue if the answer was successfull
-        if resp.status() != reqwest::StatusCode::Ok {
+        if resp.status() != reqwest::StatusCode::OK {
             bail!("Share-online file info failed, please check your credentials or download link");
         }
 
@@ -316,7 +320,7 @@ impl ShareOnline {
                                 let resp = reqwest::Client::new().get(&v.url).send()?;
 
                                 // only continue if the answer was successfull
-                                if resp.status() != reqwest::StatusCode::Ok {
+                                if resp.status() != reqwest::StatusCode::OK {
                                     bail!("Share-online free download failed");
                                 }
 

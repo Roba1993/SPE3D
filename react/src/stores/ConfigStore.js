@@ -1,16 +1,32 @@
 import { observable, computed, action } from "mobx";
+import HosterImage from '../asset/hoster/hoster';
 
 export default class ConfigStore {
     global;
-    extension = (window.chrome && chrome.runtime && chrome.runtime.id != undefined)
+    extension = (window.chrome && chrome.runtime && chrome.runtime.id != undefined);
+    hoster = [
+        { key: 'so', text: 'Share-Online.biz', value: 'ShareOnline', img: HosterImage.shareonline() },
+        { key: 'filer', text: 'Filer.net', value: 'Filer', img: HosterImage.filer() },
+    ];
+
     @observable server;
     @observable server_online = false;
     @observable server_remote = window.location.hostname;
-    @observable share_online = [];
+    @observable accounts = [];
     
     constructor(global) {
         this.global = global;
         this.fetchConfig();
+    }
+
+    getHosterImage(hoster) {
+        for(var h of this.hoster) {
+            if(h.value == hoster) {
+                return h.img;
+            }
+        }
+
+        return HosterImage.other();
     }
 
     updateServer() {
@@ -76,11 +92,11 @@ export default class ConfigStore {
     replaceConfig(rawObj) {
         this.server = new Server(rawObj.server);
 
-        var so = [];
+        var acc = [];
         rawObj.accounts.forEach(c => {
-            so.push(new Account(c))
+            acc.push(new Account(c))
         });
-        this.share_online.replace(so);
+        this.accounts.replace(acc);
     }
 
     fetchConfig() {

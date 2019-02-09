@@ -2,10 +2,12 @@
 //! them for the `DownloadManager`.
 
 pub mod so;
+pub mod filer;
 
 use crate::error::*;
 use crate::models::{DownloadFile, FileStatus, SmartDownloadList};
 use self::so::ShareOnline;
+use self::filer::Filer;
 use crate::config::Config;
 use std::thread;
 use std::sync::{Arc};
@@ -54,6 +56,7 @@ impl Downloader {
     pub fn new(config: Config, d_list: SmartDownloadList, bus: MessageBus) -> Downloader {
         let loader = Arc::new(vec!(
             Box::new(ShareOnline::new(config.clone(), d_list.clone(), bus.clone())) as Box<Loader+Sync+Send>,
+            Box::new(Filer::new(config.clone(), d_list.clone(), bus.clone())) as Box<Loader+Sync+Send>,
         ));
 
          Downloader {

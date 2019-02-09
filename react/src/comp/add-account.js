@@ -82,6 +82,7 @@ export default class AddAccount extends Component {
 
 const options = [
     { key: 'so', text: 'Share-Online.biz', value: 'ShareOnline' },
+    { key: 'filer', text: 'Filer.net', value: 'Filer' },
 ]
 
 const styleGlobal = {

@@ -34,6 +34,7 @@ error_chain!{
         Utf8(::std::str::Utf8Error);
         FromUtf8(::std::string::FromUtf8Error);
         Reqwest(::reqwest::Error);
+        ReqwestParse(::reqwest::UrlError);
         Regex(::regex::Error);
         ParseIntError(::std::num::ParseIntError);
         SerdeJson(::serde_json::error::Error);
