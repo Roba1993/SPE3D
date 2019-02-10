@@ -23,7 +23,7 @@ export default class WsRest {
             else if(msg.DownloadSpeed != undefined) {
                 // data is send as an array where position 0 is the file and 
                 // position 1 is the speed per second
-                var file = this.global.dloads.getFileById(msg.DownloadSpeed[0]);
+                var file = this.global.dload.getFileById(msg.DownloadSpeed[0]);
                 file.downloaded += msg.DownloadSpeed[1];
                 file.speed = msg.DownloadSpeed[1];
             }
