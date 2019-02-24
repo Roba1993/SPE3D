@@ -6,6 +6,10 @@ import { Input, Icon, Button, Header, Message } from 'semantic-ui-react'
 export default class Notify extends Component {
 
     render() {
+        if(this.props.global.notify == undefined) {
+            return <div></div>;
+        }
+
         let { notify } = this.props.global;
 
         const msgList = notify.messages.map(msg => (

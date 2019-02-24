@@ -26,8 +26,8 @@ export default class ConfigServer extends Component {
         return (
             <Segment>
                 <Form onSubmit={this.handleSubmit}>
-                    <Form.Input label='Server IP' name='ip' value={server.ip} onChange={this.handleChange} />
-                    <Form.Input label='Port' name='port' value={server.port} onChange={this.handleChange} />
+                    <Form.Input label='Server Adress' name='ip' value={server.ip} onChange={this.handleChange} />
+                    <Form.Input label='Server Port' name='port' value={server.port} onChange={this.handleChange} />
                     <Form.Button content='Save' />
                 </Form>
             </Segment>

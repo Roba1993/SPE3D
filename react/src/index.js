@@ -29,11 +29,17 @@ class App extends Component {
 
     deleteAccount(e) {
         e.preventDefault();
-        global.config.removeAccount(global.ui.accountSelected);
+        global.config.con.removeAccount(global.ui.accountSelected);
         global.ui.accountSelected = false;
     }
 
     getMenu() {
+        if (this.props.global.ui == undefined) {
+            return <Menu.Item name='actions' style={styleButtons} active={false}>
+                <Link to="/links" style={styleButton}><Icon name='plus' size='large' /></Link>
+            </Menu.Item>
+        }
+
         if (this.props.global.ui.path == '/') {
             return <Menu.Item name='actions' style={styleButtons} active={false}>
                 <Link to="/links" style={styleButton}><Icon name='plus' size='large' /></Link>
@@ -108,11 +114,6 @@ const styleButton = {
 const styleLinks = {
     color: '#00ca34',
     marginRight: '10px'
-}
-
-if (global.config.extension) {
-    document.body.style.width = "800px";
-    document.body.style.height = "600px";
 }
 
 ReactDOM.render(<App global={global} />, document.getElementById('app'))

@@ -12,19 +12,16 @@ export default class DloadStore {
         this.con = new Dload(global);
         new Ws(global);
 
-        if(!this.global.config.extension) {
-            // get the downloads
-            this.con.getDloads().then(m => this.replaceDloads(m));
-        }
+        this.updateDloads();
     }
 
     getFileById(id) {
         // loop over all container
-        for(var i of this.dloads) {
+        for (var i of this.dloads) {
             // loop over all files
-            for(var j of i.files) {
+            for (var j of i.files) {
                 // check if the id is matching
-                if(j.id == id) {
+                if (j.id == id) {
                     return j;
                 }
             }
@@ -36,23 +33,26 @@ export default class DloadStore {
     }
 
     getFile(id) {
-        for(var i of this.dloads) {
-            for(var j of i.files) {
-                if(j.id == id) {
+        for (var i of this.dloads) {
+            for (var j of i.files) {
+                if (j.id == id) {
                     return j;
                 }
             }
         }
     }
 
-    replaceDloads(rawObj) {
-        var dloads = [];
+    updateDloads() {
+        var that = this;
+        this.con.getDloads().then(msg => {
+            var dloads = [];
 
-        rawObj.forEach(c => {
-            dloads.push(new Container(c))
+            msg.forEach(c => {
+                dloads.push(new Container(c))
+            });
+
+            that.dloads.replace(dloads);
         });
-
-        this.dloads.replace(dloads);
     }
 }
 
@@ -66,13 +66,13 @@ class Container {
     @computed get speedFmt() { return formatBytes(this.speed, 2); }
     @computed get downloaded() { return this.files.reduce((pre, curr) => pre + curr.downloaded, 0); }
     @computed get downloadedFmt() { return formatBytes(this.downloaded, 2); }
-    @computed get downloadedPercent() { return (this.size != 0) ? (this.downloaded / this.size * 100).toFixed(0): 0; }
+    @computed get downloadedPercent() { return (this.size != 0) ? (this.downloaded / this.size * 100).toFixed(0) : 0; }
     @computed get finishedDownloads() { return this.files.reduce((pre, curr) => (curr.status == "Downloaded") ? pre += 1 : pre, 0); }
     @computed get isDownloading() { return this.files.some(f => f.status == "Downloading"); }
     @computed get isDownloaded() { return this.files.every(f => f.status == "Downloaded"); }
     @computed get isWarning() { return this.files.some(f => f.status == "WrongHash"); }
     @computed get downloadTime() { return (this.speed != 0) ? formatTime((this.size / this.speed)) : (this.isDownloaded) ? 'Done' : 'Not Started'; }
-    @computed get icon() { return (this.isDownloaded) ? 'check' :(this.isWarning) ? 'warning sign' :(this.isDownloading) ? 'spinner' : 'arrow down'; }
+    @computed get icon() { return (this.isDownloaded) ? 'check' : (this.isWarning) ? 'warning sign' : (this.isDownloading) ? 'spinner' : 'arrow down'; }
 
     constructor(rawObj) {
         this.id = rawObj.id;
@@ -102,9 +102,9 @@ class File {
     @computed get isDownloading() { return this.status == "Downloading"; }
     @computed get isDownloaded() { return this.status == "Downloaded"; }
     @computed get isWarning() { return this.status == "WrongHash"; }
-    @computed get downloadedPercent() { return (this.size != 0) ? (this.downloaded / this.size * 100).toFixed(0): 0; }
+    @computed get downloadedPercent() { return (this.size != 0) ? (this.downloaded / this.size * 100).toFixed(0) : 0; }
     @computed get downloadTime() { return (this.speed != 0) ? formatTime((this.size / this.speed)) : (this.isDownloaded) ? 'Done' : 'Not Started'; }
-    @computed get icon() { return (this.isDownloaded) ? 'check' :(this.isWarning) ? 'warning sign' :(this.isDownloading) ? 'spinner' : 'arrow down'; }
+    @computed get icon() { return (this.isDownloaded) ? 'check' : (this.isWarning) ? 'warning sign' : (this.isDownloading) ? 'spinner' : 'arrow down'; }
 
     constructor(rawObj) {
         this.id = rawObj.id

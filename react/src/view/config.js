@@ -3,13 +3,14 @@ import { observer } from "mobx-react"
 import { Grid, Menu, Segment, Icon, Form } from 'semantic-ui-react'
 import ConfigServer from '../comp/config-server'
 import ConfigAccounts from '../comp/config-accounts'
+import ConfigAddon from '../comp/config-addon'
 
 @observer
 export default class Config extends Component {
     handleItemClick = (e, { name }) => {
         this.props.global.ui.configTab = name;
         // with each menu change we load the actual config data
-        this.props.global.config.fetchConfig();
+        this.props.global.config.updateConfig();
     }
 
     render() {
@@ -19,6 +20,9 @@ export default class Config extends Component {
         switch (configTab) {
             case 'accounts':
                 content = <ConfigAccounts global={this.props.global} />
+                break;
+            case 'addon':
+                content = <ConfigAddon global={this.props.global} />
                 break;
             default:
                 content = <ConfigServer global={this.props.global} />
@@ -37,6 +41,12 @@ export default class Config extends Component {
                             <Icon name='key' />
                             Accounts
                         </Menu.Item>
+                        {this.props.global.config.extension == true &&
+                            <Menu.Item name='addon' active={configTab === 'addon'} onClick={this.handleItemClick}  >
+                                <Icon name='box' />
+                                Addon
+                            </Menu.Item>
+                        }
                     </Menu>
                 </Grid.Column>
 

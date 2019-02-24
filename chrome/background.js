@@ -1,6 +1,10 @@
 var spe3d_server;
 var websocket;
 
+chrome.browserAction.onClicked.addListener(function () {
+    chrome.runtime.openOptionsPage();
+});
+
 // function to connect to the webserver
 function connect() {
     websocket = new WebSocket('ws://' + spe3d_server + '/updates');

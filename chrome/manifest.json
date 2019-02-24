@@ -18,8 +18,9 @@
         "persistent": false
     },
     "browser_action": {
-        "default_popup": "www/index.html",
-        "default_title": "Click to define SPE3D settings"
+
+        "default_title": "SPE3D Download Manager"
     },
+    "options_page": "www/index.html",
     "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

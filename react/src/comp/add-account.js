@@ -16,7 +16,7 @@ export default class AddAccount extends Component {
             reader.onload = () => {
                 const fileAsBinaryString = reader.result;
 
-                fetch("http://" + window.location.hostname + ":8000/api/add-ejs",
+                fetch("http://" + window.location.hostname + "/api/add-ejs",
                     {
                         method: "POST",
                         headers: {
@@ -44,7 +44,7 @@ export default class AddAccount extends Component {
     handleChange = (e, { name, value }) => this.setState({ [name]: value })
 
     handleSubmit = () => {
-        this.props.global.config.addAccount(this.state);
+        this.props.global.config.con.addAccount(this.state);
         this.handleClose();
     }
 
@@ -53,6 +53,11 @@ export default class AddAccount extends Component {
     }
 
     render() {
+        if(this.props.global.ui == undefined) {
+            return <div></div>;
+        }
+
+
         return <Modal open={this.props.global.ui.modalAddAccount} onClose={this.handleClose}>
             <div style={styleGlobal} >
                 <Segment style={styleSegment} >

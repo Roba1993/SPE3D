@@ -1,27 +1,42 @@
 import { observable, computed, action } from "mobx";
 import HosterImage from '../asset/hoster/hoster';
+import Config from '../con/Config';
 
 export default class ConfigStore {
     global;
-    extension = (window.chrome && chrome.runtime && chrome.runtime.id != undefined);
-    hoster = [
-        { key: 'so', text: 'Share-Online.biz', value: 'ShareOnline', img: HosterImage.shareonline() },
-        { key: 'filer', text: 'Filer.net', value: 'Filer', img: HosterImage.filer() },
-    ];
+    hoster;
+    con;
 
     @observable server;
     @observable server_online = false;
-    @observable server_remote = window.location.hostname;
     @observable accounts = [];
-    
+
     constructor(global) {
         this.global = global;
-        this.fetchConfig();
+        this.hoster = [
+            { key: 'so', text: 'Share-Online.biz', value: 'ShareOnline', img: HosterImage.shareonline() },
+            { key: 'filer', text: 'Filer.net', value: 'Filer', img: HosterImage.filer() },
+        ];
+    }
+
+    updateConfig() {
+        this.con = new Config(this.global);
+
+        var that = this;
+        this.con.getConfig().then(res => {
+            that.server = new Server(res.server);
+
+            var acc = [];
+            res.accounts.forEach(c => {
+                acc.push(new Account(c))
+            });
+            that.accounts.replace(acc);
+        })
     }
 
     getHosterImage(hoster) {
-        for(var h of this.hoster) {
-            if(h.value == hoster) {
+        for (var h of this.hoster) {
+            if (h.value == hoster) {
                 return h.img;
             }
         }
@@ -30,7 +45,7 @@ export default class ConfigStore {
     }
 
     updateServer() {
-        fetch("http://" + window.location.hostname + ":8000/api/config/server",
+        fetch("http://" + this.global.server + "/api/config/server",
             {
                 method: "POST",
                 headers: {
@@ -50,7 +65,7 @@ export default class ConfigStore {
     }
 
     addAccount(acc) {
-        fetch("http://" + window.location.hostname + ":8000/api/config/account",
+        fetch("http://" + this.global.server + "/api/config/account",
             {
                 method: "POST",
                 headers: {
@@ -71,7 +86,7 @@ export default class ConfigStore {
     }
 
     removeAccount(id) {
-        fetch("http://" + window.location.hostname + ":8000/api/config/account/"+id,
+        fetch("http://" + this.global.server + "/api/config/account/" + id,
             {
                 method: "DELETE",
                 headers: {
@@ -87,33 +102,6 @@ export default class ConfigStore {
                     this.fetchConfig();
                 }
             })
-    }
-
-    replaceConfig(rawObj) {
-        this.server = new Server(rawObj.server);
-
-        var acc = [];
-        rawObj.accounts.forEach(c => {
-            acc.push(new Account(c))
-        });
-        this.accounts.replace(acc);
-    }
-
-    fetchConfig() {
-        fetch(`http://` + window.location.hostname + `:8000/api/config`)
-            .then(res => {
-                if (res.status != 200) {
-                    this.global.notify.createErrorMsg("Download list not avialable", "The server was not able to provide the config");
-                }
-
-                return res.json()
-            })
-            .then(config => {
-                this.replaceConfig(config);
-            })
-            .catch(error => {
-                this.global.notify.createErrorMsg("Connection to server failed", "Can't get the config list from server");
-            });
     }
 }
 
