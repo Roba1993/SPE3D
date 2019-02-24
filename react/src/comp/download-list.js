@@ -27,7 +27,7 @@ export default class DownloadList extends Component {
                     <Header as='h3' style={styleText}>Downloaded</Header>
                 </Grid.Column>
             </Grid>
-            {this.props.global.dload.dloads.map((item, index) => (
+            {this.props.global.dload.dloads.map((item) => (
                 <DloadContainer key={item.id} container={item} global={this.props.global} />
             ))}
         </div>

@@ -41,7 +41,7 @@ export default class Config extends Component {
                             <Icon name='key' />
                             Accounts
                         </Menu.Item>
-                        {this.props.global.config.extension == true &&
+                        {this.props.global.addon == true &&
                             <Menu.Item name='addon' active={configTab === 'addon'} onClick={this.handleItemClick}  >
                                 <Icon name='box' />
                                 Addon

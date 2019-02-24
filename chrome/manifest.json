@@ -18,7 +18,6 @@
         "persistent": false
     },
     "browser_action": {
-
         "default_title": "SPE3D Download Manager"
     },
     "options_page": "www/index.html",
