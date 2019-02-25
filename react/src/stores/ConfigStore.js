@@ -17,6 +17,8 @@ export default class ConfigStore {
             { key: 'so', text: 'Share-Online.biz', value: 'ShareOnline', img: HosterImage.shareonline() },
             { key: 'filer', text: 'Filer.net', value: 'Filer', img: HosterImage.filer() },
         ];
+
+        this.updateConfig();
     }
 
     updateConfig() {
